@@ -27,3 +27,7 @@ obj/
 # Python
 .venv/
 venv/
+
+# Synopsys
+setup_synopsys_eda.tcsh
+setup_synopsys_eda.sh
