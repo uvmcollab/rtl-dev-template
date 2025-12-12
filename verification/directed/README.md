@@ -29,7 +29,7 @@ source setup_synopsys_eda.tcsh
 make
 ```
 
-# Rules
+## Rules
 
 **Use `timeunit 1ns;` and `timeprecision 100ps;` in:**
 
@@ -39,4 +39,9 @@ make
 
 **Skip them in:**
 
-- Synthesizable RTL modules
+- Synthetizable RTL modules
+
+**You can save your waveform in:**
+
+- `verification/directed/scripts/verdi/`
+- Example: `waveform.rc`
