@@ -1,4 +1,4 @@
-#!/usr/bin/env tcsh
+#!/usr/bin/env bash
 
 # ====================== IMPORTANT ======================= #
 # THIS IS AN EXAMPLE FILE, PLEASE REPLACE IT WITH YOUR OWN
@@ -6,5 +6,5 @@
 # AND INCLUDE THE TB ENVIRONMENT VARIABLES
 
 # TB Environment Variables
-setenv GIT_ROOT `git rev-parse --show-toplevel`
-setenv UVM_WORK $GIT_ROOT/work/tb
+export GIT_ROOT="$(git rev-parse --show-toplevel)"
+export UVM_WORK="$GIT_ROOT/work/tb"
