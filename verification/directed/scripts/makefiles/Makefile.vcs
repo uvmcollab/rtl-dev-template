@@ -130,7 +130,7 @@ all: help
 #______________________________________________________________________________
 
 .PHONY: tools-check
-tools-check: ## UVM: Check for missing tools
+tools-check: ## TB: Check for missing tools
 	@echo -e "$(C_ORA)Synopsys tool checking...$(NC)"
 	@for tool in $(SYNOPSYS_TOOLS); do \
 		if ! command -v $$tool >/dev/null 2>&1; then \
@@ -144,7 +144,7 @@ tools-check: ## UVM: Check for missing tools
 #______________________________________________________________________________
 
 .PHONY: vars
-vars: ## UVM: Print Makefile variables
+vars: ## TB: Print Makefile variables
 	@echo -e "$(C_ORA)Miscellaneous variables$(NC)"
 	@echo "CUR_DATE    = $(CUR_DATE)"
 	@echo ""
@@ -183,15 +183,15 @@ vars: ## UVM: Print Makefile variables
 # ==========================  SYNOPSYS VCS/VERDI/URG  ==========================
 
 .PHONY: compile
-compile: ## UVM: Runs VCS compilation
-	@echo -e "$(C_ORA)UVM: Compiling UVM project$(NC)"
+compile: ## TB: Runs VCS compilation
+	@echo -e "$(C_ORA)TB: Compiling UVM project$(NC)"
 	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
 	cd $(RUN_DIR) && vcs $(VCS_FLAGS)
 #______________________________________________________________________________
 
 .PHONY: sim
-sim: ## UVM: Runs simv simulation
-	@echo -e "$(C_ORA)UVM: Running simulation SEED_MODE=$(SEED_MODE) SEED=$(SEED)$(NC)"
+sim: ## TB: Runs simv simulation
+	@echo -e "$(C_ORA)TB: Running simulation SEED_MODE=$(SEED_MODE) SEED=$(SEED)$(NC)"
 	@mkdir -p $(RUN_DIR)/$(JOB_NAME) $(LOGS_DIR)
 	TEST_ID="$(CUR_DATE)_$(TEST)_PID_$$$$"; \
 	LOG_FILE="-l $(LOGS_DIR)/$${TEST_ID}_simv.log"; \
@@ -200,45 +200,45 @@ sim: ## UVM: Runs simv simulation
 #______________________________________________________________________________
 
 .PHONY: verdi
-verdi: ## UVM: Opens Verdi GUI
-	@echo -e "$(C_ORA)UVM: Openning Verdi$(NC)"
+verdi: ## TB: Opens Verdi GUI
+	@echo -e "$(C_ORA)TB: Openning Verdi$(NC)"
 	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) &
 #______________________________________________________________________________
 
 .PHONY: verdi-play
-verdi-play: ## UVM: Opens Verdi GUI running verdi.tcl file
-	@echo -e "$(C_ORA)UVM: Openning Verdi running verdi.tcl$(NC)"
+verdi-play: ## TB: Opens Verdi GUI running verdi.tcl file
+	@echo -e "$(C_ORA)TB: Openning Verdi running verdi.tcl$(NC)"
 	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) $(VERDI_PLAY) &
 #______________________________________________________________________________
 
 .PHONY: cov
-cov: ## UVM: Create coverage report
-	@echo -e "$(C_ORA)UVM: Creating coverage report$(NC)"
+cov: ## TB: Create coverage report
+	@echo -e "$(C_ORA)TB: Creating coverage report$(NC)"
 	@mkdir -p $(COV_DIR)
 	cd $(RUN_DIR) && urg $(URG_FLAGS)
 #______________________________________________________________________________
 
 .PHONY: verdi-cov
-verdi-cov: ## UVM: Open coverage report in Verdi
-	@echo -e "$(C_ORA)UVM: Creating coverage report$(NC)"
+verdi-cov: ## TB: Open coverage report in Verdi
+	@echo -e "$(C_ORA)TB: Creating coverage report$(NC)"
 	cd $(RUN_DIR) && verdi $(VERDI_COV) &
 #______________________________________________________________________________
 
 .PHONY: compile-dpi
-compile-dpi: ## UVM: Run dpi (C/C++) compilation
-	@echo -e "$(C_ORA)UVM: Compiling dpi (C/C++) code$(NC)"
+compile-dpi: ## TB: Run dpi (C/C++) compilation
+	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
 	g++ -c $(DPI_DIR)/external.cpp -o $(DPI_DIR)/external.o
 #______________________________________________________________________________
 
 .PHONY: clean
-clean: ## UVM: Remove all simulation files
-	@echo -e "$(C_ORA)UVM: Removing all simulation files$(NC)"
+clean: ## TB: Remove all simulation files
+	@echo -e "$(C_ORA)TB: Removing all simulation files$(NC)"
 	rm -rf $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
 #______________________________________________________________________________
 
 .PHONY: clean-logs
-clean-logs: ## UVM: Remove logs
-	@echo -e "$(C_ORA)UVM: Removing all logs files$(NC)"
+clean-logs: ## TB: Remove logs
+	@echo -e "$(C_ORA)TB: Removing all logs files$(NC)"
 	rm -rf $(LOGS_DIR)
 #______________________________________________________________________________
 
@@ -254,7 +254,7 @@ help: ## TB: Displays help message
 	@echo "======================================================================"
 	@echo "Usage: make <target> <variables>"
 	@echo "--------------------------- Targets ----------------------------------"
-	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_LBL)%-35s$(NC) %s\n", $$1, $$2}'
+	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_LBL)%-25s$(NC) %s\n", $$1, $$2}'
 	@echo "--------------------------- Variables -------------------------------"
 	@echo "  TEST              : Name of UVM_TEST"
 	@echo "  SEED_MODE         : Selects seed mode [auto|fixed]"
