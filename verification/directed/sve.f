@@ -2,5 +2,5 @@
 +incdir+tests
 +incdir+tb
 tests/test.sv
-tb/vif_if.sv
+sv/vif_if.sv
 tb/tb.sv
