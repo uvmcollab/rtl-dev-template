@@ -85,8 +85,8 @@ module debouncer #(
   always_ff @(posedge clk_i, posedge rst_i) begin
     if (rst_i) begin
       ff4 <= 'd0;
-    end else if (ena_cnt) begin
-      ff4 <= ~ff3 & ff2;
+    end else begin
+      ff4 <= ff3;
     end
   end
 
