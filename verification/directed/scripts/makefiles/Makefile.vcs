@@ -44,7 +44,7 @@ ENABLE_GUI ?= false
 GUI_FLAGS  ?=
 
 # Random Seed mode [auto, fixed]
-SEED_MODE  ?= fixed
+SEED_MODE  ?= auto
 SEED_FLAGS ?=
 
 # Code Coverage [true, false]
@@ -76,7 +76,7 @@ endif
 # ==============================  TOOLS SETUP  ================================
 
 # Files
-RTL_FILES = $(RTL_DIR)/buffer.sv
+RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(TB_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
 DPI_FILE = 
