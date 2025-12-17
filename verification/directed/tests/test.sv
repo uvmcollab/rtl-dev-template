@@ -69,6 +69,7 @@ module test (
       time2 = $realtime;
       repeat (delay2) @(vif.cb);
       $display("[INFO] %10t: iter = %3d, time1  = %t, time2  = %t", $realtime, i, time1, time2);
+      $display("[INFO] %10t: iter = %3d, total_cycles = %10d", $realtime, i, delay1 + delay2);
     end
   endtask : bounce
 
