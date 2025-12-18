@@ -17,15 +17,16 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  debouncer #(
-      .ClkFreq(ClkFreq),
-      .StableTime(StableTime)
-  ) dut (
-      .clk_i(vif.clk_i),
-      .rst_i(vif.rst_i),
-      .sw_i(vif.sw_i),
-      .db_level_o(vif.db_level_o),
-      .db_tick_o(vif.db_tick_o)
+  fifo 
+   dut (
+      .clk(vif.clk),
+      .rst(vif.rst),
+      .wr(vif.wr),
+      .rd(vif.rd),
+      .din(vif.din),
+      .dout(vif.dout),
+      .empty(vif.empty),
+      .full(vif.full)
   );
 
   initial begin

@@ -33,8 +33,8 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 # TB configurations
 TEST ?= top_test
 SEED ?= 1503625532
-VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" +define+ERROR2_VERSION
-RUN_ARGS ?= +iterations=1000 +debounce_time=120
+VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" 
+RUN_ARGS ?= 
 
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
@@ -76,7 +76,7 @@ endif
 # ==============================  TOOLS SETUP  ================================
 
 # Files
-RTL_FILES = $(RTL_DIR)/debouncer.sv
+RTL_FILES = $(RTL_DIR)/fifo.sv
 SVE = -F $(TB_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
 DPI_FILE = 
