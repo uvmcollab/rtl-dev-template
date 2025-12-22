@@ -2,7 +2,7 @@ module test (
     vif_if vif
 );
   // =================== DPI FUNCTIONS ==================== //
-  import "DPI-C" function void ref_model(real a);
+  import "DPI-C" function real ref_model(real initial_value);
 
   // ================== GLOBAL VARIABLES ================== //
 
@@ -10,6 +10,7 @@ module test (
 
   // =================== MAIN SEQUENCE ==================== //
   real init_value = 20.0;
+  real output_value;
 
   initial begin
     // Initial values
@@ -17,9 +18,9 @@ module test (
     get_config_args();
     
     // DPI Call
-    init_value = 50.0;
-    $display("init_value is %5.2f", init_value);
-    ref_model(init_value);
+    init_value = 1.0;
+    output_value = ref_model(init_value);
+    $display("init_value is %5.2f, output_value is %5.2f", init_value, output_value);
 
     // Apply reset
     reset();
