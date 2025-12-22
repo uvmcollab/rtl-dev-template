@@ -27,6 +27,18 @@ module tb;
       .db_level_o(vif.db_level_o),
       .db_tick_o(vif.db_tick_o)
   );
+  
+  // SVA
+  bind dut sva #(
+      .ClkFreq(ClkFreq),
+      .StableTime(StableTime)
+  ) dut_sva (
+      .clk_i(vif.clk_i),
+      .rst_i(vif.rst_i),
+      .sw_i(vif.sw_i),
+      .db_level_o(vif.db_level_o),
+      .db_tick_o(vif.db_tick_o)
+  );
 
   initial begin
     $timeformat(-9, 1, "ns", 10);

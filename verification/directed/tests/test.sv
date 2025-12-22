@@ -9,19 +9,12 @@ module test (
   import config_pkg::*;
 
   // =================== MAIN SEQUENCE ==================== //
-  real init_value = 20.0;
-  real output_value;
 
   initial begin
     // Initial values
     $display("Begin Of Simulation.");
     get_config_args();
     
-    // DPI Call
-    init_value = 1.0;
-    output_value = ref_model(init_value);
-    $display("init_value is %5.2f, output_value is %5.2f", init_value, output_value);
-
     // Apply reset
     reset();
 
