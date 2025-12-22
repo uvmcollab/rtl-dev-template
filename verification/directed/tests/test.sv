@@ -2,21 +2,36 @@ module test (
     vif_if vif
 );
 
+    integer i;
+    reg start = 0;
+
+  // ================== GLOBAL VARIABLES ================== //
+
+  import config_pkg::*;
+
   // =================== MAIN SEQUENCE ==================== //
 
   initial begin
+    // Initial values
     $display("Begin Of Simulation.");
+    get_config_args();
 
+    // Apply reset
     reset();
 
-    fork
-      begin
-        send_data();
-      end
-      begin
-        monitor_output();
-      end
-    join_any
+    // Stimulus
+
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b100;
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b101;
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b110;
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b111;
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b000; 
+    
+    write();
+    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b010;
+    @(posedge vif.clk);
+    
+    read();
 
     // Drain time
     #(100ns);
@@ -24,31 +39,35 @@ module test (
     $finish;
   end
 
-
   // ======================= TASKS ======================== //
 
   task automatic reset();
-    // Initial values
-    vif.rst_i = 1'b1;
-    vif.d_i  = 'd0;
+    vif.rst = 1'b1;
+    repeat (1) @(vif.cb);
+    vif.cb.rst <= 1'b0;
     repeat (2) @(vif.cb);
-    vif.cb.rst_i <= 1'b0;
   endtask : reset
 
+  task write();
+    for( i = 0; i < 15; i++)
+      begin   
+        vif.din = $urandom();
+        vif.wr = 1'b1;
+        vif.rd = 1'b0;
+        @(posedge vif.clk);
+      end
+  endtask
 
-  task automatic send_data();
-    for (int i = 0; i < 10; i++) begin
-      @(vif.cb);
-      vif.cb.d_i <= i;
-    end
-  endtask : send_data
+  task read();
+    for( i = 0; i < 15; i++)
+      begin      
+        vif.wr = 1'b0;
+        vif.rd = 1'b1;
+        @(posedge vif.clk);
+      end
+  endtask
 
 
-  task automatic monitor_output();
-    forever begin
-      @(vif.q_o);
-      $display("[INFO]: %8t: %4h", $realtime, vif.q_o);
-    end
-  endtask : monitor_output
+
 
 endmodule : test

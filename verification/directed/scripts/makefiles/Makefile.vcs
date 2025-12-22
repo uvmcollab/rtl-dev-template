@@ -33,7 +33,7 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 # TB configurations
 TEST ?= top_test
 SEED ?= 1503625532
-VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\"
+VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" 
 RUN_ARGS ?= 
 
 COV_NAME ?= simv_cov
@@ -44,12 +44,12 @@ ENABLE_GUI ?= false
 GUI_FLAGS  ?=
 
 # Random Seed mode [auto, fixed]
-SEED_MODE  ?= fixed
+SEED_MODE  ?= auto
 SEED_FLAGS ?=
 
 # Code Coverage [true, false]
 ENABLE_CODE_COV  ?= false
-COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch
+COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch+tgl+assert
 COV_FLAGS_VCS    ?=
 COV_FLAGS_SIMV   ?=
 
@@ -76,7 +76,7 @@ endif
 # ==============================  TOOLS SETUP  ================================
 
 # Files
-RTL_FILES = $(RTL_DIR)/buffer.sv
+RTL_FILES = $(RTL_DIR)/fifo.sv
 SVE = -F $(TB_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
 DPI_FILE = 
