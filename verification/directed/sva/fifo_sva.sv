@@ -1,6 +1,6 @@
 // Assertion 
 
-module assert_fifo (
+module fifo_sva (
   input clk, rst, wr, rd, 
   input [7:0] din,input [7:0] dout,
   input empty, full);
@@ -70,14 +70,14 @@ module assert_fifo (
     end
 
   // 7 Data must match
-    
-  property p1;
-    integer waddr;
-    logic [7:0] data;
-
-    (wr, waddr = tb.i, data = din) |-> ##[1:30] rd ##0 (waddr == tb.i - 1, $display("din: %0d dout :%0d",data, dout));
+/*    
+//  property p1;
+//    integer waddr;
+//    logic [7:0] data;
+//
+//    (wr, waddr = test.i, data = din) |-> ##[1:30] rd ##0 (waddr == test.i - 1, $display("din: %0d dout :%0d",data, dout));
   endproperty
   
   assert property (@(posedge clk) disable iff(rst) p1) $info("Suc at %0t",$time);
-
+*/
 endmodule

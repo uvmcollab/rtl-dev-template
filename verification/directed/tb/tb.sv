@@ -29,6 +29,18 @@ module tb;
       .full(vif.full)
   );
 
+  // Bind
+
+  bind fifo fifo_sva dut2 (
+      .clk(vif.clk),
+      .rst(vif.rst),
+      .wr(vif.wr),
+      .rd(vif.rd),
+      .din(vif.din),
+      .dout(vif.dout),
+      .empty(vif.empty),
+      .full(vif.full));
+
   initial begin
     $timeformat(-9, 1, "ns", 10);
   end

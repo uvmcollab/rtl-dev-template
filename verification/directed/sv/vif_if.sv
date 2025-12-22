@@ -21,6 +21,10 @@ interface vif_if(
   clocking cb @(posedge clk);
     default input #1ns output #1ns;
     output rst;
+    output rd;
+    output wr;
+    input empty;
+    input full;
   endclocking
 
 endinterface : vif_if
