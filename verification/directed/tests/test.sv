@@ -1,17 +1,25 @@
 module test (
     vif_if vif
 );
+  // =================== DPI FUNCTIONS ==================== //
+  import "DPI-C" function void ref_model(real a);
 
   // ================== GLOBAL VARIABLES ================== //
 
   import config_pkg::*;
 
   // =================== MAIN SEQUENCE ==================== //
+  real init_value = 20.0;
 
   initial begin
     // Initial values
     $display("Begin Of Simulation.");
     get_config_args();
+    
+    // DPI Call
+    init_value = 50.0;
+    $display("init_value is %5.2f", init_value);
+    ref_model(init_value);
 
     // Apply reset
     reset();

@@ -107,7 +107,7 @@ module debouncer #(
   // FSMD State and Data Registers
   always_ff @(posedge clk_i, posedge rst_i) begin
     if (rst_i) begin
-      state_reg <= 'd0;
+      state_reg <= ST_IDLE;
       ff4       <= 'd0;
     end else begin
       state_reg <= state_next;
@@ -158,7 +158,7 @@ module debouncer #(
   // FSMD State and Data Registers
   always_ff @(posedge clk_i, posedge rst_i) begin
     if (rst_i) begin
-      state_reg <= 'd0;
+      state_reg <= ST_IDLE;
       ff4       <= 'd0;
     end else begin
       state_reg <= state_next;

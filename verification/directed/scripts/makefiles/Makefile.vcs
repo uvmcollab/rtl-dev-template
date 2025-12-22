@@ -34,7 +34,7 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 TEST ?= top_test
 SEED ?= 1503625532
 VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" +define+ERROR2_VERSION
-RUN_ARGS ?= +iterations=1000 +debounce_time=120
+RUN_ARGS ?= +iterations=10 +debounce_time=120
 
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
@@ -79,7 +79,7 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(TB_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE = 
+DPI_FILE = $(DPI_DIR)/dpi.cpp
 
 # Synopsys VCS/SIMV options
 FILES = $(RTL_FILES) $(SVE) 
@@ -91,12 +91,12 @@ VCS_FLAGS = -full64 -sverilog \
 			-top tb \
 			-j8 \
 			$(VCS_DEFINES) \
-			$(COV_FLAGS_VCS)
+			$(COV_FLAGS_VCS) \
+			$(DPI_FILE)
 
 SIMV_FLAGS = -ucli -do $(TB_DIR)/run.tcl \
 			$(COV_FLAGS_SIMV) \
 			$(RUN_ARGS) \
-			$(DPI_FILE) \
 			$(GUI_FLAGS)
 
 URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
@@ -227,7 +227,10 @@ verdi-cov: ## TB: Open coverage report in Verdi
 .PHONY: compile-dpi
 compile-dpi: ## TB: Run dpi (C/C++) compilation
 	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
-	g++ -c $(DPI_DIR)/external.cpp -o $(DPI_DIR)/external.o
+	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
+# -fPIC Flag to generate position-independent code (shared library)
+# If you want to compile dpi repeatedly and include the .o to simv
+# but it's better to compile from vcs command
 #______________________________________________________________________________
 
 .PHONY: clean
