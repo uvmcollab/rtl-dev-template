@@ -2,9 +2,6 @@ module test (
     vif_if vif
 );
 
-    integer i;
-    reg start = 0;
-
   // ================== GLOBAL VARIABLES ================== //
 
   import config_pkg::*;
@@ -20,17 +17,18 @@ module test (
     reset();
 
     // Stimulus
+    stress();
+    
+    // Small delay
+    #(100ns);
 
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b100;
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b101;
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b110;
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b111;
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b000; 
-    
+    // Test write
     write();
-    @(posedge vif.clk) {vif.rst,vif.wr,vif.rd} = 3'b010;
-    @(posedge vif.clk);
+
+    // Small delay
+    #(100ns);
     
+    // Test write
     read();
 
     // Drain time
@@ -42,32 +40,81 @@ module test (
   // ======================= TASKS ======================== //
 
   task automatic reset();
-    vif.rst = 1'b1;
+    vif.rst  = 1'b1;
+    vif.wr   = 1'b0;
+    vif.rd   = 1'b0;
+    vif.din  = 'd0;
     repeat (1) @(vif.cb);
     vif.cb.rst <= 1'b0;
     repeat (2) @(vif.cb);
   endtask : reset
 
-  task write();
-    for( i = 0; i < 15; i++)
-      begin   
-        vif.din = $urandom();
-        vif.wr = 1'b1;
-        vif.rd = 1'b0;
-        @(posedge vif.clk);
-      end
+
+  task automatic stress();
+    // First reset
+    @(vif.cb);
+    vif.cb.rst <= 1'b1;
+    vif.cb.wr  <= 1'b0;
+    vif.cb.rd  <= 1'b0;
+
+    // Reset and Read
+    @(vif.cb);
+    vif.cb.rst <= 1'b1;
+    vif.cb.wr  <= 1'b0;
+    vif.cb.rd  <= 1'b1;
+
+    // Reset and Write
+    @(vif.cb);
+    vif.cb.rst <= 1'b1;
+    vif.cb.wr  <= 1'b1;
+    vif.cb.rd  <= 1'b0;
+
+    // Reset and Read and Write
+    @(vif.cb);
+    vif.cb.rst <= 1'b1;
+    vif.cb.wr  <= 1'b1;
+    vif.cb.rd  <= 1'b1;
+
+    // Release
+    @(vif.cb);
+    vif.cb.rst <= 1'b0;
+    vif.cb.wr  <= 1'b0;
+    vif.cb.rd  <= 1'b0;
+
+    // Separation
+    @(vif.cb);
+  endtask : stress
+
+
+  task automatic drive(logic [2:0] stimuli);
+    @(vif.cb);
+    vif.cb.rst <= stimuli[2];
+    vif.cb.wr  <= stimuli[1];
+    vif.cb.rd  <= stimuli[0];
+  endtask : drive
+
+
+  task automatic write();
+    for(int i = 0; i < 15; i++) begin   
+      @(vif.cb);
+      vif.cb.din <= $urandom();
+      vif.cb.wr  <= 1'b1;
+      vif.cb.rd  <= 1'b0;
+    end
+    // Separation
+    @(vif.cb);
+    vif.cb.wr  <= 1'b0;
   endtask
 
-  task read();
-    for( i = 0; i < 15; i++)
-      begin      
-        vif.wr = 1'b0;
-        vif.rd = 1'b1;
-        @(posedge vif.clk);
-      end
+  task automatic read();
+    for(int i = 0; i < 15; i++) begin      
+      @(vif.cb);
+      vif.cb.wr <= 1'b0;
+      vif.cb.rd <= 1'b1;
+    end
+    // Separation
+    @(vif.cb);
+    vif.cb.rd  <= 1'b0;
   endtask
-
-
-
 
 endmodule : test

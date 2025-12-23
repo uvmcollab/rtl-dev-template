@@ -13,8 +13,8 @@ interface vif_if(
   logic rst;
   logic wr;
   logic rd;
-  logic din;
-  logic dout;
+  logic [7:0] din;
+  logic [7:0] dout;
   logic empty;
   logic full;
 
@@ -23,8 +23,7 @@ interface vif_if(
     output rst;
     output rd;
     output wr;
-    input empty;
-    input full;
+    output din;
   endclocking
 
 endinterface : vif_if

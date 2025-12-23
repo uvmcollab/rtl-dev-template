@@ -17,8 +17,7 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  fifo 
-   dut (
+  fifo dut (
       .clk(vif.clk),
       .rst(vif.rst),
       .wr(vif.wr),
@@ -29,8 +28,7 @@ module tb;
       .full(vif.full)
   );
 
-  // Bind
-
+  // SVA
   bind fifo fifo_sva dut2 (
       .clk(vif.clk),
       .rst(vif.rst),
@@ -39,7 +37,8 @@ module tb;
       .din(vif.din),
       .dout(vif.dout),
       .empty(vif.empty),
-      .full(vif.full));
+      .full(vif.full)
+  );
 
   initial begin
     $timeformat(-9, 1, "ns", 10);
