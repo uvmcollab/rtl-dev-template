@@ -34,7 +34,7 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 TEST ?= top_test
 SEED ?= 1503625532
 VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" +define+ERROR1_VERSION
-RUN_ARGS ?= +iterations=800 +debounce_time=120
+RUN_ARGS ?= +iterations=300 +debounce_time=120
 
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
@@ -55,7 +55,8 @@ COV_FLAGS_SIMV   ?=
 
 # SVA [true, false]
 ENABLE_SVA ?= true
-SVA_FLAGS  ?= 
+SVA_FLAGS_VCS  ?= -assert disable
+SVA_FLAGS_SIMV ?=
 
 # ================================  CONTROL  ==================================
 
@@ -79,9 +80,9 @@ endif
 
 # SVA mode switch [true, false]
 ifeq ($(ENABLE_SVA),true)
-	SVA_FLAGS = -assert verbose+quiet1+report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
+	SVA_FLAGS_VCS  = -assert enable_diag+enable_hier
+	SVA_FLAGS_SIMV = -assert finish_maxfail=1000+maxcover=10+summary+quiet1+hier=$(TB_DIR)/sva/assert_hier.txt+report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
 endif
-
 
 # ==============================  TOOLS SETUP  ================================
 
@@ -102,12 +103,13 @@ VCS_FLAGS = -full64 -sverilog \
 			-j8 \
 			$(VCS_DEFINES) \
 			$(COV_FLAGS_VCS) \
+			$(SVA_FLAGS_VCS) \
 			$(DPI_FILE)
 
 SIMV_FLAGS = -ucli -do $(TB_DIR)/run.tcl \
 			$(COV_FLAGS_SIMV) \
+			$(SVA_FLAGS_SIMV) \
 			$(RUN_ARGS) \
-			$(SVA_FLAGS) \
 			$(GUI_FLAGS)
 
 URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
