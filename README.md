@@ -12,7 +12,7 @@ export TB_WORK="$GIT_ROOT/work/tb"
 export TB_SCRIPTS="$GIT_ROOT/verification/directed/scripts"
 mkdir -p "$TB_WORK" && cd "$TB_WORK"
 ln -sf $TB_SCRIPTS/makefiles/Makefile.vcs Makefile
-ln -sf $TB_SCRIPTS/setup/setup_synopsys_eda.tcsh
+ln -sf $TB_SCRIPTS/setup/setup_synopsys_eda.sh
 make
 ```
 

@@ -3,9 +3,11 @@ module tb;
   timeunit      1ns;
   timeprecision 1ps;
 
+  import config_pkg::*;
+
   // Clock signal
   logic clk_i = 0;
-  int unsigned MainClkPeriod = 10;
+  int unsigned MainClkPeriod = 10;  // 100 MHz -> 10 ns period
   always #(MainClkPeriod / 2) clk_i = ~clk_i;
 
   // Interface
@@ -15,13 +17,27 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  buffer #(
-      .Width(8)
-  ) dut (
-      .clk_i(vif.clk_i),
-      .rst_i(vif.rst_i),
-      .d_i(vif.d_i),
-      .q_o(vif.q_o)
+  fifo dut (
+      .clk(vif.clk),
+      .rst(vif.rst),
+      .wr(vif.wr),
+      .rd(vif.rd),
+      .din(vif.din),
+      .dout(vif.dout),
+      .empty(vif.empty),
+      .full(vif.full)
+  );
+
+  // SVA
+  bind fifo fifo_sva dut2 (
+      .clk(vif.clk),
+      .rst(vif.rst),
+      .wr(vif.wr),
+      .rd(vif.rd),
+      .din(vif.din),
+      .dout(vif.dout),
+      .empty(vif.empty),
+      .full(vif.full)
   );
 
   initial begin

@@ -2,23 +2,29 @@
 `define VIF_IF_SV
 
 interface vif_if(
-    input logic clk_i
+    input logic clk
 ); 
 
   timeunit      1ns;
   timeprecision 1ps;
   
-  localparam int Width = 8;
+  import config_pkg::*;
+  
+  logic rst;
+  logic wr;
+  logic rd;
+  logic [7:0] din;
+  logic [7:0] dout;
+  logic empty;
+  logic full;
 
-  logic rst_i;
-  logic [Width-1:0] d_i;
-  logic [Width-1:0] q_o;
-
-  clocking cb @(posedge clk_i);
+  clocking cb @(posedge clk);
     default input #1ns output #1ns;
-    output rst_i;
-    output d_i;
-  endclocking : cb
+    output rst;
+    output rd;
+    output wr;
+    output din;
+  endclocking
 
 endinterface : vif_if
 
