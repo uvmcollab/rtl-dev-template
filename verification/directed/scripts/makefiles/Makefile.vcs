@@ -41,20 +41,20 @@ JOB_NAME ?= debug
 
 # Simulation mode [true, false]
 ENABLE_GUI ?= false
-GUI_FLAGS  ?=
+GUI_FLAGS  ?= -ucli -do $(TB_DIR)/run.tcl
 
 # Random Seed mode [auto, fixed]
 SEED_MODE  ?= auto
 SEED_FLAGS ?=
 
 # Code Coverage [true, false]
-ENABLE_CODE_COV  ?= true
+ENABLE_CODE_COV  ?= false
 COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch+tgl+assert
 COV_FLAGS_VCS    ?=
 COV_FLAGS_SIMV   ?=
 
 # SVA [true, false]
-ENABLE_SVA ?= true
+ENABLE_SVA ?= false
 SVA_FLAGS_VCS  ?= -assert disable
 SVA_FLAGS_SIMV ?=
 
@@ -97,7 +97,7 @@ FILES = $(RTL_FILES) $(SVE)
 
 VCS_FLAGS = -full64 -sverilog \
 			-lca -debug_access+all -kdb \
-			-timescale=1ps/100fs $(FILES) \
+			-timescale=1ns/100ps $(FILES) \
 			-l $(LOGS_DIR)/$(CUR_DATE)_comp.log \
 			-top tb \
 			-j8 \
@@ -106,11 +106,10 @@ VCS_FLAGS = -full64 -sverilog \
 			$(SVA_FLAGS_VCS) \
 			$(DPI_FILE)
 
-SIMV_FLAGS = -ucli -do $(TB_DIR)/run.tcl \
-			$(COV_FLAGS_SIMV) \
-			$(SVA_FLAGS_SIMV) \
-			$(RUN_ARGS) \
-			$(GUI_FLAGS)
+SIMV_FLAGS = $(COV_FLAGS_SIMV) \
+			 $(SVA_FLAGS_SIMV) \
+			 $(RUN_ARGS) \
+			 $(GUI_FLAGS)
 
 URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
 			-log $(LOGS_DIR)/$(CUR_DATE)_cov.log \
@@ -209,7 +208,7 @@ sim: ## TB: Runs simv simulation
 	TEST_ID="$(CUR_DATE)_$(TEST)_PID_$$$$"; \
 	LOG_FILE="-l $(LOGS_DIR)/$${TEST_ID}_simv.log"; \
 	COV_FLAGS="-cm_test debug -cm_name $${TEST_ID}"; \
-	cd $(RUN_DIR)/$(JOB_NAME) && ./../simv $(SEED_FLAGS) $(SIMV_FLAGS) $${COV_FLAGS} $${LOG_FILE}
+	cd $(RUN_DIR)/$(JOB_NAME) && ./../simv $(SEED_FLAGS) $${COV_FLAGS} $${LOG_FILE} $(SIMV_FLAGS)
 #______________________________________________________________________________
 
 .PHONY: verdi
@@ -282,7 +281,6 @@ help: ## TB: Displays help message
 	@echo "  JOB_NAME          : Name of the job (simulation folder)"
 	@echo "-------------------------- Variable Values --------------------------"
 	@echo "  TEST              : $(TEST)"
-	@echo "  VERBOSITY         : $(VERBOSITY)"
 	@echo "  SEED_MODE         : $(SEED_MODE)"
 	@echo "  SEED              : $(SEED)"
 	@echo "  ENABLE_GUI        : $(ENABLE_GUI)"
