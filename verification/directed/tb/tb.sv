@@ -15,22 +15,22 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  mux8_16 #(
-    .Width(16)
+  D_mux8 #(
+    .Width(5)
   )
   dut(
       .clk_i(vif.clk_i),
       .rst_i(vif.rst_i),
       .sel_i(vif.sel_i),
-      .a_i(vif.a_i),
-      .b_i(vif.b_i),
-      .c_i(vif.c_i),
-      .d_i(vif.d_i),
-      .e_i(vif.e_i),
-      .f_i(vif.f_i),
-      .g_i(vif.g_i),
-      .h_i(vif.h_i),
-      .y_o(vif.y_o)
+      .value_i(vif.value_i),
+      .a_o(vif.a_o),
+      .b_o(vif.b_o),
+      .c_o(vif.c_o),
+      .d_o(vif.d_o),
+      .e_o(vif.e_o),
+      .f_o(vif.f_o),
+      .g_o(vif.g_o),
+      .h_o(vif.h_o)
   );
 
   initial begin

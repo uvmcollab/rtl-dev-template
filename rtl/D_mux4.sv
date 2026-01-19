@@ -8,11 +8,10 @@ module D_mux4 #(
     output logic [Width-1:0] a_o,
     output logic [Width-1:0] b_o,
     output logic [Width-1:0] c_o,
-    output logic [Width-1:0] d_o,
-
+    output logic [Width-1:0] d_o
 );
 
-always_ff @(posedge clk i or posedge rst_i) begin
+always_ff @(posedge clk_i or posedge rst_i) begin
 if(rst_i) begin
    a_o <= '0;
    b_o <= '0;
