@@ -15,8 +15,12 @@ interface vif_if(
   logic [Width-1:0] b_i;
   logic [Width-1:0] c_i;
   logic [Width-1:0] d_i;
+  logic [Width-1:0] e_i;
+  logic [Width-1:0] f_i;
+  logic [Width-1:0] g_i;
+  logic [Width-1:0] h_i;
   logic [Width-1:0] y_o;
-  logic [1:0]sel_i;
+  logic [2:0]sel_i;
 
   clocking cb @(posedge clk_i);
     default input #1ns output #1ns;
@@ -26,6 +30,10 @@ interface vif_if(
     output b_i;
     output c_i;
     output d_i;
+    output e_i;
+    output f_i;
+    output h_i;
+    output g_i;
   endclocking : cb
 
 endinterface : vif_if

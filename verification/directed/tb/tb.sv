@@ -15,7 +15,7 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  mux4_16 #(
+  mux8_16 #(
     .Width(16)
   )
   dut(
@@ -26,6 +26,10 @@ module tb;
       .b_i(vif.b_i),
       .c_i(vif.c_i),
       .d_i(vif.d_i),
+      .e_i(vif.e_i),
+      .f_i(vif.f_i),
+      .g_i(vif.g_i),
+      .h_i(vif.h_i),
       .y_o(vif.y_o)
   );
 
