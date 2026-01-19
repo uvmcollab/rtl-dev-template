@@ -15,13 +15,18 @@ module tb;
   test top_test (vif);
 
   // Instantiation
-  buffer #(
-      .Width(8)
-  ) dut (
+  mux4_16 #(
+    .Width(16)
+  )
+  dut(
       .clk_i(vif.clk_i),
       .rst_i(vif.rst_i),
+      .sel_i(vif.sel_i),
+      .a_i(vif.a_i),
+      .b_i(vif.b_i),
+      .c_i(vif.c_i),
       .d_i(vif.d_i),
-      .q_o(vif.q_o)
+      .y_o(vif.y_o)
   );
 
   initial begin

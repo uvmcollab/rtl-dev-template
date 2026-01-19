@@ -11,7 +11,22 @@ module test (
 
     fork
       begin
-        send_data();
+        send_data_port_a();
+      end
+      begin
+        send_data_port_b();
+      end
+      begin
+        send_data_port_c();
+      end
+      begin
+        send_data_port_d();
+      end
+      //begin
+      //  send_data_value();
+      //end
+      begin
+        send_data_port_select();
       end
       begin
         monitor_output();
@@ -30,24 +45,68 @@ module test (
   task automatic reset();
     // Initial values
     vif.rst_i = 1'b1;
-    vif.d_i  = 'd0;
+    vif.a_i  = 'd0;
+    vif.b_i = 'd0;
+    vif.c_i = 'd0;
+    vif.d_i = 'd0;
+    vif.sel_i = 'd0;
+    //vif.value_i = 'd0;
+    //vif.y_o  = 'd0;
     repeat (2) @(vif.cb);
     vif.cb.rst_i <= 1'b0;
   endtask : reset
 
 
-  task automatic send_data();
+  task automatic send_data_port_a();
     for (int i = 0; i < 10; i++) begin
       @(vif.cb);
-      vif.cb.d_i <= i;
+      vif.cb.a_i <= i;
     end
-  endtask : send_data
+  endtask : send_data_port_a
 
+  task automatic send_data_port_b();
+  for (int i= 10; i >=0; i--)begin
+    @(vif.cb);
+    vif.cb.b_i <= i;
+  end
+  endtask: send_data_port_b
+
+    task automatic send_data_port_c();
+  for (int i= 10; i >=0; i--)begin
+    @(vif.cb);
+    vif.cb.c_i <= i;
+  end
+  endtask: send_data_port_c
+
+  task automatic send_data_port_d();
+  for (int i= 10; i >=0; i--)begin
+    @(vif.cb);
+    vif.cb.d_i <= i;
+  end
+  endtask: send_data_port_d
+
+
+  //task automatic send_data_value();
+  //
+  //  for (int i =0 ; i <10 ; i++ ) begin
+  //  @(vif.cb);
+  //  vif.cb.value_i <= i;
+  //end
+  //endtask: send_data_value
+
+  task automatic send_data_port_select();
+  forever begin
+    @(vif.cb);
+    vif.cb.sel_i <= $urandom_range(0,3);
+  end
+
+  endtask: send_data_port_select
 
   task automatic monitor_output();
     forever begin
-      @(vif.q_o);
-      $display("[INFO]: %8t: %4h", $realtime, vif.q_o);
+      @(vif.y_o);
+      $display("[INFO: Demux]: %8t: Port A = %8b Port B = %8b Port C = %8b Port D = %8b Selector = %2b Salida = %8b ", 
+      $realtime,vif.a_i, vif.b_i, vif.c_i, vif.d_i, vif.sel_i, vif.y_o);
     end
   endtask : monitor_output
 

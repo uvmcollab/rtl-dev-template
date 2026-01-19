@@ -11,12 +11,20 @@ interface vif_if(
   localparam int Width = 8;
 
   logic rst_i;
+  logic [Width-1:0] a_i;
+  logic [Width-1:0] b_i;
+  logic [Width-1:0] c_i;
   logic [Width-1:0] d_i;
-  logic [Width-1:0] q_o;
+  logic [Width-1:0] y_o;
+  logic [1:0]sel_i;
 
   clocking cb @(posedge clk_i);
     default input #1ns output #1ns;
     output rst_i;
+    output sel_i;
+    output a_i;
+    output b_i;
+    output c_i;
     output d_i;
   endclocking : cb
 
