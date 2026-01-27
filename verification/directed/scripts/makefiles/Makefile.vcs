@@ -33,25 +33,30 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 # TB configurations
 TEST ?= top_test
 SEED ?= 1503625532
-VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\"
-RUN_ARGS ?= 
+VCS_DEFINES ?= +define+GIT_DIR=\"$(TB_DIR)\" +define+ERROR1_VERSION
+RUN_ARGS ?= +iterations=300 +debounce_time=120
 
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
 
 # Simulation mode [true, false]
 ENABLE_GUI ?= false
-GUI_FLAGS  ?=
+GUI_FLAGS  ?= -ucli -do $(TB_DIR)/run.tcl
 
 # Random Seed mode [auto, fixed]
-SEED_MODE  ?= fixed
+SEED_MODE  ?= auto
 SEED_FLAGS ?=
 
 # Code Coverage [true, false]
 ENABLE_CODE_COV  ?= false
-COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch
+COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch+tgl+assert
 COV_FLAGS_VCS    ?=
 COV_FLAGS_SIMV   ?=
+
+# SVA [true, false]
+ENABLE_SVA ?= false
+SVA_FLAGS_VCS  ?= -assert disable
+SVA_FLAGS_SIMV ?=
 
 # ================================  CONTROL  ==================================
 
@@ -73,31 +78,38 @@ else
   SEED_FLAGS = +ntb_random_seed=$(SEED)
 endif
 
+# SVA mode switch [true, false]
+ifeq ($(ENABLE_SVA),true)
+	SVA_FLAGS_VCS  = -assert enable_diag+enable_hier
+	SVA_FLAGS_SIMV = -assert finish_maxfail=1000+maxcover=10+summary+quiet1+hier=$(TB_DIR)/sva/assert_hier.txt+report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
+endif
+
 # ==============================  TOOLS SETUP  ================================
 
 # Files
-RTL_FILES = $(RTL_DIR)/buffer.sv
+RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(TB_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE = 
+DPI_FILE = $(DPI_DIR)/dpi.cpp
 
 # Synopsys VCS/SIMV options
 FILES = $(RTL_FILES) $(SVE) 
 
 VCS_FLAGS = -full64 -sverilog \
 			-lca -debug_access+all -kdb \
-			-timescale=1ps/100fs $(FILES) \
+			-timescale=1ns/100ps $(FILES) \
 			-l $(LOGS_DIR)/$(CUR_DATE)_comp.log \
 			-top tb \
 			-j8 \
 			$(VCS_DEFINES) \
-			$(COV_FLAGS_VCS)
+			$(COV_FLAGS_VCS) \
+			$(SVA_FLAGS_VCS) \
+			$(DPI_FILE)
 
-SIMV_FLAGS = -ucli -do $(TB_DIR)/run.tcl \
-			$(COV_FLAGS_SIMV) \
-			$(RUN_ARGS) \
-			$(DPI_FILE) \
-			$(GUI_FLAGS)
+SIMV_FLAGS = $(COV_FLAGS_SIMV) \
+			 $(SVA_FLAGS_SIMV) \
+			 $(RUN_ARGS) \
+			 $(GUI_FLAGS)
 
 URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
 			-log $(LOGS_DIR)/$(CUR_DATE)_cov.log \
@@ -196,7 +208,7 @@ sim: ## TB: Runs simv simulation
 	TEST_ID="$(CUR_DATE)_$(TEST)_PID_$$$$"; \
 	LOG_FILE="-l $(LOGS_DIR)/$${TEST_ID}_simv.log"; \
 	COV_FLAGS="-cm_test debug -cm_name $${TEST_ID}"; \
-	cd $(RUN_DIR)/$(JOB_NAME) && ./../simv $(SEED_FLAGS) $(SIMV_FLAGS) $${COV_FLAGS} $${LOG_FILE}
+	cd $(RUN_DIR)/$(JOB_NAME) && ./../simv $(SEED_FLAGS) $${COV_FLAGS} $${LOG_FILE} $(SIMV_FLAGS)
 #______________________________________________________________________________
 
 .PHONY: verdi
@@ -227,7 +239,10 @@ verdi-cov: ## TB: Open coverage report in Verdi
 .PHONY: compile-dpi
 compile-dpi: ## TB: Run dpi (C/C++) compilation
 	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
-	g++ -c $(DPI_DIR)/external.cpp -o $(DPI_DIR)/external.o
+	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
+# -fPIC Flag to generate position-independent code (shared library)
+# If you want to compile dpi repeatedly and include the .o to simv
+# but it's better to compile from vcs command
 #______________________________________________________________________________
 
 .PHONY: clean
@@ -266,7 +281,6 @@ help: ## TB: Displays help message
 	@echo "  JOB_NAME          : Name of the job (simulation folder)"
 	@echo "-------------------------- Variable Values --------------------------"
 	@echo "  TEST              : $(TEST)"
-	@echo "  VERBOSITY         : $(VERBOSITY)"
 	@echo "  SEED_MODE         : $(SEED_MODE)"
 	@echo "  SEED              : $(SEED)"
 	@echo "  ENABLE_GUI        : $(ENABLE_GUI)"

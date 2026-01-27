@@ -6,19 +6,22 @@ interface vif_if(
 ); 
 
   timeunit      1ns;
-  timeprecision 1ps;
+  timeprecision 100ps;
   
-  localparam int Width = 8;
-
+  import config_pkg::*;
+  
   logic rst_i;
-  logic [Width-1:0] d_i;
-  logic [Width-1:0] q_o;
+  logic sw_i;
+  logic db_level_o;
+  logic db_tick_o;
 
   clocking cb @(posedge clk_i);
     default input #1ns output #1ns;
     output rst_i;
-    output d_i;
-  endclocking : cb
+    output sw_i;
+    input db_level_o;
+    input db_tick_o;
+  endclocking
 
 endinterface : vif_if
 

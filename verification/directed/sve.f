@@ -1,6 +1,10 @@
-+incdir+$GIT_ROOT
++incdir+rtl
++incdir+sva
 +incdir+tests
 +incdir+tb
-tests/test.sv
++incdir+sv
+sv/config_pkg.sv
 sv/vif_if.sv
+tests/test.sv
+sva/sva.sv
 tb/tb.sv

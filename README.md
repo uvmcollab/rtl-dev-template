@@ -20,7 +20,7 @@ make
 
 ```bash
 setenv GIT_ROOT `git rev-parse --show-toplevel`
-setenv TB_WORK $GIT_ROOT/work/uvm
+setenv TB_WORK $GIT_ROOT/work/tb
 setenv TB_SCRIPTS $GIT_ROOT/verification/directed/scripts
 mkdir -p $TB_WORK && cd $TB_WORK
 ln -sf $TB_SCRIPTS/makefiles/Makefile.vcs Makefile
