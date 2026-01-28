@@ -33,11 +33,11 @@ module tb;
       .ClkFreq(ClkFreq),
       .StableTime(StableTime)
   ) dut_sva (
-      .clk_i(vif.clk_i),
-      .rst_i(vif.rst_i),
-      .sw_i(vif.sw_i),
-      .db_level_o(vif.db_level_o),
-      .db_tick_o(vif.db_tick_o)
+      .clk_i(clk_i),
+      .rst_i(rst_i),
+      .sw_i(sw_i),
+      .db_level_o(db_level_o),
+      .db_tick_o(db_tick_o)
   );
 
   initial begin
