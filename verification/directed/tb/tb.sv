@@ -37,7 +37,10 @@ module tb;
       .rst_i(rst_i),
       .sw_i(sw_i),
       .db_level_o(db_level_o),
-      .db_tick_o(db_tick_o)
+      .db_tick_o(db_tick_o),
+      .ff1(ff1),
+      .ff2(ff2),
+      .ff3(ff3)
   );
 
   initial begin
