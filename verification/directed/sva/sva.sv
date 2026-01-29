@@ -28,6 +28,7 @@ module sva #(
   property p3;
     @(posedge clk_i) 
     $rose(ff1) |-> (##1 ff2);
+    //$rose(ff1) |=> ff2;
   endproperty
 
   property p4;
