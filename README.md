@@ -29,7 +29,12 @@ source setup_synopsys_eda.sh
 make
 ```
 
-# How to use DPI tool
+
+# What is DPI in SystemVerilog?
+
+Systemverilog introduces the Direct Programming Interface (DPI), an easier way to interface with C, C++, or any other foreing language. Once you declare or **import** the C routine with the import statement, you can call it as if it were any SystemVerilog routine. Additionally, your C code can call SystemVerilog routines. With the DPI you can connect C code that reads stimulus, constains a reference model, or just extends SystemVerilog with new funtionality. Currently SystemVerilog only supports an interface to the C language. C++ code has to be wrapped to look like C.
+
+## How to use DPI tool
 
 This project includes a simple example of using **SystemVerilog DPI-C** to call C++ reference  model from testebench.
 
