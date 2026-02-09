@@ -14,8 +14,8 @@ module tb;
   vif_if vif (clk_i);
 
   // Test
-  test top_test (vif);
-
+ // test top_test (vif);
+  test_dpi top_test (vif);
   // Instantiation
   debouncer #(
       .ClkFreq(ClkFreq),

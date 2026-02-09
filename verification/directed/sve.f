@@ -5,6 +5,6 @@
 +incdir+sv
 sv/config_pkg.sv
 sv/vif_if.sv
-tests/test.sv
+tests/test_dpi.sv
 sva/sva.sv
 tb/tb.sv
