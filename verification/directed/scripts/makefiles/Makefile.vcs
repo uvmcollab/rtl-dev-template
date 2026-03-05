@@ -257,6 +257,18 @@ clean-logs: ## TB: Remove logs
 	rm -rf $(LOGS_DIR)
 #______________________________________________________________________________
 
+.PHONY: fsdb2vcd
+fsdb2vcd: ## TB: Convert FSDB to VCD
+	@echo -e "$(C_ORA)TB: Convert FSDB to VCD$(NC)"
+	cd $(RUN_DIR)/$(JOB_NAME) && fsdb2vcd novas.fsdb -o novas.vcd -sv
+#______________________________________________________________________________
+
+.PHONY: vcd2fsdb
+vcd2fsdb: ## TB: Convert VCD to FSDB
+	@echo -e "$(C_ORA)TB: Convert VCD to FSDB$(NC)"
+	cd $(RUN_DIR)/$(JOB_NAME) && vcd2fsdb novas.vcd -o novas.fsdb -sv
+#______________________________________________________________________________
+
 # ================================= INCLUDES ================================= #
 
 # ## PYTHON REGRESSION MANAGER
