@@ -12,12 +12,20 @@
 ## [Revisions]      -
 ##=============================================================================
 
-# Dump signals to FSDB
+# Dump signals to FSDB (RECOMMENDED)
 dump -file novas.fsdb -type FSDB
-dump -add tb.* -depth 0 -fid FSDB0 -aggregates
+dump -add tb.dut -depth 1 -ports -fid FSDB0
 run
+quit
+
+# Dump signals to FSDB (RECOMMENDED)
+# dump -file novas.fsdb -type FSDB
+# dump -add tb.* -depth 0 -fid FSDB0 -aggregates
+# run
+# quit
 
 # Dumps everything from root including complex data type 
 # dump -file novas.fsdb -type FSDB
 # dump -add / -aggregates
 # run
+# quit
