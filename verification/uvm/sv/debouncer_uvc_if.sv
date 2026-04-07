@@ -24,19 +24,18 @@ interface debouncer_uvc_if (
 
   initial begin
     // Initialize signals here
+    sw_i = 0;
   end
 
   // ============================ CLOCKING BLOCKS ============================= //
   
   clocking cb_drv @(posedge clk_i);
     default input #1step output #CB_OUTPUT_SKEW;
-    output rst_i;
     output sw_i;
   endclocking : cb_drv
 
   clocking cb_drv_neg @(negedge clk_i);
     default input #1step output #CB_OUTPUT_SKEW;
-    output rst_i;
     output sw_i;
   endclocking : cb_drv_neg
 
@@ -44,7 +43,7 @@ interface debouncer_uvc_if (
     default input #1step output #CB_OUTPUT_SKEW;
   endclocking : cb_mon
 
-  clocking cb_mon_neg @(posedge clk_i);
+  clocking cb_mon_neg @(negedge clk_i);
     default input #1step output #CB_OUTPUT_SKEW;
   endclocking : cb_mon_neg
 
