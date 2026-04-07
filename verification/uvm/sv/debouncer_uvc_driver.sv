@@ -31,8 +31,17 @@ endtask : run_phase
 
 
 task debouncer_uvc_driver::do_drive();
+  // Sync with the clock
+
+  // Assert
+  vif.cb_drv.sw_i <= 1'b1;
+  repeat(req.m_cycles_asserted) @(vif.cb_drv);
+
+  // Deassert
+  vif.cb_drv.sw_i <= 1'b0;
+  repeat(req.m_cycles_deasserted) @(vif.cb_drv);
+
   //`uvm_info(get_type_name(), m_trans.convert2string(), UVM_DEBUG)
-  `uvm_info(get_type_name(), "PUT THE DRIVER CODE HERE", UVM_MEDIUM)
 endtask : do_drive
 
 `endif // DEBOUNCER_UVC_DRIVER_SV
