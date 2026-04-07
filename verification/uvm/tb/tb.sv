@@ -22,13 +22,19 @@ module tb;
 
   // Interface
   debouncer_uvc_if debouncer_uvc_vif (clk_i);
+  
+  assign debouncer_uvc_vif.rst_i = rst_i;
 
   // DUT Instantiation
-  buffer dut (
-    .clk_i (clk_i),
-    .rst_i (rst_i),
-    .d_i   (),
-    .q_o   ()
+  debouncer # (
+    .ClkFreq(100_000_000),
+    .StableTime(1)
+  ) dut (
+    .clk_i     (debouncer_uvc_vif.clk_i),
+    .rst_i     (debouncer_uvc_vif.rst_i),
+    .sw_i      (debouncer_uvc_vif.sw_i),
+    .db_level_o(debouncer_uvc_vif.db_level_o),
+    .db_tick_o (debouncer_uvc_vif.db_tick_o)
   );
 
   initial begin
