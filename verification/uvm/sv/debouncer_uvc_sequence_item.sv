@@ -6,9 +6,15 @@ class debouncer_uvc_sequence_item extends uvm_sequence_item;
   `uvm_object_utils(debouncer_uvc_sequence_item)
 
   // Transaction variables
-  rand int unsigned    m_assert_delay;
-  rand int unsigned    m_pulse_width;
+  rand int unsigned    m_delay_ps;
+  rand int unsigned    m_pulse_width_ps;
+
+  rand int unsigned    m_cycles_asserted;
+  rand int unsigned    m_cycles_deasserted;
+
   rand bit             m_value;
+  
+  // Monitoring values
   bit                  m_db_level;
   bit                  m_db_tick;
 
@@ -31,8 +37,8 @@ function void debouncer_uvc_sequence_item::do_copy(uvm_object rhs);
   debouncer_uvc_sequence_item rhs_;
   if (!$cast(rhs_, rhs)) `uvm_fatal(get_type_name(), "Cast of rhs object failed")
   super.do_copy(rhs);
-  m_assert_delay       = rhs_.m_assert_delay;
-  m_pulse_width        = rhs_.m_pulse_width;
+  m_delay_ps           = rhs_.m_delay_ps;
+  m_pulse_width_ps     = rhs_.m_pulse_width_ps;
   m_value              = rhs_.m_value;
   m_db_level           = rhs_.m_db_level;
   m_db_tick            = rhs_.m_db_tick;
@@ -44,8 +50,8 @@ function bit debouncer_uvc_sequence_item::do_compare(uvm_object rhs, uvm_compare
   debouncer_uvc_sequence_item rhs_;
   if (!$cast(rhs_, rhs)) `uvm_fatal(get_type_name(), "Cast of rhs object failed")
   result = super.do_compare(rhs, comparer);
-  result &= (m_assert_delay       == rhs_.m_assert_delay);
-  result &= (m_pulse_width        == rhs_.m_pulse_width);
+  result &= (m_delay_ps           == rhs_.m_delay_ps);
+  result &= (m_pulse_width_ps     == rhs_.m_pulse_width_ps);
   result &= (m_value              == rhs_.m_value);
   result &= (m_db_level           == rhs_.m_db_level);
   result &= (m_db_tick            == rhs_.m_db_tick);
@@ -63,8 +69,8 @@ function string debouncer_uvc_sequence_item::convert2string();
   string s;
   s = super.convert2string();
   $sformat(s, {s, "\n", "TRANSACTION INFORMATION (DEBOUNCER_UVC):"});
-  $sformat(s, {s, "\n", "m_assert_delay = %d"}, m_assert_delay);
-  $sformat(s, {s, "\n", "m_pulse_width = %d"}, m_pulse_width);
+  $sformat(s, {s, "\n", "m_delay_ps = %d"}, m_delay_ps);
+  $sformat(s, {s, "\n", "m_pulse_width_ps = %d"}, m_pulse_width_ps);
   $sformat(s, {s, "\n", "m_value = %d"}, m_value);
   $sformat(s, {s, "\n", "m_db_level = %d"}, m_db_level);
   $sformat(s, {s, "\n", "m_db_tick = %d"}, m_db_tick);
