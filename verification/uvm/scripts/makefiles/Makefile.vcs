@@ -37,7 +37,9 @@ TEST ?= top_test
 VERBOSITY ?= UVM_MEDIUM
 SEED ?= 3553209930
 VCS_DEFINES ?= +define+GIT_DIR=\"$(UVM_DIR)\"
-RUN_ARGS ?=
+RUN_ARGS ?= +uvm_set_config_int="uvm_test_top.m_env.vsqr,m_cli_iter, 1000" \
+			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_asserted,120 \
+			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_deasserted,120
 
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
@@ -90,7 +92,7 @@ endif
 # ==============================  TOOLS SETUP  ================================
 
 # Files
-RTL_FILES = $(RTL_DIR)/buffer.sv
+RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
 DPI_FILE =
