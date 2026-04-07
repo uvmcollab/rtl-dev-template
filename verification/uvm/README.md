@@ -54,9 +54,10 @@ From the root directory run the following:
 ```bash
 export GIT_ROOT="$(git rev-parse --show-toplevel)"
 export UVM_WORK="$GIT_ROOT/work/uvm"
+export UVM_SCRIPTS = "$GIT_ROOT/verification/uvm/scripts"
 mkdir -p "$UVM_WORK" && cd "$UVM_WORK"
-ln -sf $GIT_ROOT/scripts/makefiles/Makefile.vcs Makefile
-ln -sf $GIT_ROOT/scripts/setup/setup_synopsys_eda.sh
+ln -sf $UVM_SCRIPTS/makefiles/Makefile.vcs Makefile
+ln -sf $UVM_SCRIPTS/setup/setup_synopsys_eda.sh
 source setup_synopsys_eda.sh
 make
 ```
@@ -66,9 +67,10 @@ make
 ```bash
 setenv GIT_ROOT `git rev-parse --show-toplevel`
 setenv UVM_WORK $GIT_ROOT/work/uvm
+setenv UVM_SCRIPTS $GIT_ROOT/verification/uvm/scripts
 mkdir -p $UVM_WORK && cd $UVM_WORK
-ln -sf $GIT_ROOT/scripts/makefiles/Makefile.vcs Makefile
-ln -sf $GIT_ROOT/scripts/setup/setup_synopsys_eda.tcsh
+ln -sf $UVM_SCRIPTS/makefiles/Makefile.vcs Makefile
+ln -sf $UVM_SCRIPTS/setup/setup_synopsys_eda.tcsh
 source setup_synopsys_eda.tcsh
 make
 ```

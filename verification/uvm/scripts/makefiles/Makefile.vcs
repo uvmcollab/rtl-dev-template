@@ -18,15 +18,16 @@ CUR_DATE   := $(shell date +%Y-%m-%d_%H-%M-%S)
 
 # Directories
 GIT_DIR     := $(shell git rev-parse --show-toplevel)
-UVM_DIR     := $(GIT_DIR)
+UVM_DIR     := $(GIT_DIR)/verification/uvm
 ROOT_DIR    := $(CURDIR)
 RUN_DIR     := $(ROOT_DIR)/sim
 LOGS_DIR    := $(ROOT_DIR)/logs
 COV_DIR     := $(ROOT_DIR)/cov
 SCRIPTS_DIR := $(UVM_DIR)/scripts
+TCL_DIR     := $(SCRIPTS_DIR)/tcl
 VERDI_DIR   := $(SCRIPTS_DIR)/verdi
 UVCS_DIR    := $(UVM_DIR)/uvcs
-RTL_DIR     := $(UVM_DIR)/rtl
+RTL_DIR     := $(GIT_DIR)/rtl
 DPI_DIR     := $(UVM_DIR)/dpi
 REGR_DIR    := $(ROOT_DIR)/regression
 MERGE_DIR   := $(ROOT_DIR)/merge_cov
@@ -43,14 +44,14 @@ JOB_NAME ?= debug
 
 # Simulation mode [true, false]
 ENABLE_GUI ?= false
-GUI_FLAGS  ?= -ucli -do $(SCRIPTS_DIR)/configs/run.tcl
+GUI_FLAGS  ?= -ucli -do $(TCL_DIR)/dump.tcl
 
 # Random Seed mode [auto, fixed]
-SEED_MODE  ?= auto
+SEED_MODE  ?= fixed
 SEED_FLAGS ?=
 
 # Code Coverage [true, false]
-ENABLE_CODE_COV ?= true
+ENABLE_CODE_COV ?= false
 COV_FLAGS_COMMON ?= -cm line+cond+fsm+branch+tgl+assert
 COV_FLAGS_VCS   ?=
 COV_FLAGS_SIMV  ?=
@@ -95,7 +96,7 @@ VERDI_FILE = $(VERDI_DIR)/verdi.tcl
 DPI_FILE =
 
 # UVCs
-UVCS = -F $(UVM_DIR)/debouncer_uvc_uvc.f
+UVCS = -F $(UVM_DIR)/debouncer_uvc.f
 
 # Synopsys VCS/SIMV/URG/EMAN/VERDI options
 FILES = $(UVCS) $(RTL_FILES) $(SVE) 
