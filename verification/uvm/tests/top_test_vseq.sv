@@ -98,11 +98,11 @@ task top_test_vseq::body();
     debouncer_uvc_seq(m_cli_cycles_asserted, m_cli_cycles_deasserted);
   end
 
-  // Signature
-  `uvm_info(get_type_name(), signature(), UVM_MEDIUM)
-
   // Drain time
   #(20000ns);
+
+  // Signature
+  `uvm_info(get_type_name(), signature(), UVM_MEDIUM)
 endtask : body
 
 `endif // TOP_TEST_VSEQ_SV
