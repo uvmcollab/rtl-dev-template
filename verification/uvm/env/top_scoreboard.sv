@@ -17,11 +17,9 @@ class top_scoreboard extends uvm_scoreboard;
   bit sw_state = 0;
   bit level_state = 0;
   bit tick_state = 0;
+  bit value_to_load;
   
   int unsigned debug_counter = 0;
-
-  bit debounce_condition;
-  bit value_to_load;
 
 
   extern function new(string name, uvm_component parent);
@@ -92,8 +90,6 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
 
   // Reset logic
   if (rst) begin
-    debounce_condition = 0;
-
     cycle_counter = 0;
     sync_counter  = 0;
 
@@ -104,36 +100,30 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
 
     // Default value for tick
     tick_state = 1'b0;
-
-    // Check for any change in the input
-    if (sw != sw_state) begin
-      cycle_counter = 0;
-    end else begin
-      cycle_counter++;
-    end
-
-    // Two cycle latency
-    if (debounce_condition) begin
-      sync_counter++;
-    end
     
-    // Debounce condition
+    // Check debouncer condition
     if (cycle_counter == 99) begin
-      debounce_condition = 1;
-      value_to_load = sw;
-      sync_counter = 0;
-    end
-
-    // Assert level and assert tick for one clock cycle
-    if (sync_counter == 2) begin
       if (level_state == 1'b0 && value_to_load == 1'b1) begin
         tick_state = 1'b1;
       end
       level_state = value_to_load;
-      debounce_condition = 0;
+    end
+
+    // Check for changes and 2 cycle latency
+    if (sw != sw_state) begin
       sync_counter = 0;
+    end else begin
+      sync_counter++;
     end
     
+    // After latency count normally
+    if (sync_counter == 1) begin
+      cycle_counter = 0;
+      value_to_load = sw;
+    end else begin
+      cycle_counter++;
+    end
+
     // Update state
     sw_state = sw;
   end
