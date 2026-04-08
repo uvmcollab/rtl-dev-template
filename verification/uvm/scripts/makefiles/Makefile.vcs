@@ -36,11 +36,11 @@ MERGE_DIR   := $(ROOT_DIR)/merge_cov
 TEST ?= top_test
 VERBOSITY ?= UVM_MEDIUM
 SEED ?= 3553209930
-VCS_DEFINES ?= +define+GIT_DIR=\"$(UVM_DIR)\" +define+ERROR1_VERSION
+VCS_DEFINES ?= +define+GIT_DIR=\"$(UVM_DIR)\"
 RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,1000 \
 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_asserted,120 \
 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_deasserted,120
-
+#+define+ERROR1_VERSION
 COV_NAME ?= simv_cov
 JOB_NAME ?= debug
 

@@ -10,6 +10,7 @@ class top_env extends uvm_env;
   debouncer_uvc_config m_debouncer_uvc_config;
   debouncer_uvc_agent  m_debouncer_uvc_agent;
 
+  top_scoreboard    m_scoreboard;
   top_vsqr          vsqr;
 
   extern function new(string name, uvm_component parent);
@@ -41,12 +42,15 @@ function void top_env::build_phase(uvm_phase phase);
   uvm_config_db #(debouncer_uvc_config)::set(this, "m_debouncer_uvc_agent", "config", m_debouncer_uvc_config);
   m_debouncer_uvc_agent = debouncer_uvc_agent::type_id::create("m_debouncer_uvc_agent", this);
 
+  m_scoreboard = top_scoreboard::type_id::create("m_scoreboard",this);
+
   vsqr = top_vsqr::type_id::create("vsqr", this);
 endfunction : build_phase
 
 
 function void top_env::connect_phase(uvm_phase phase);
   vsqr.m_debouncer_sequencer = m_debouncer_uvc_agent.m_sequencer;
+  m_debouncer_uvc_agent.analysis_port.connect(m_scoreboard.observed_imp_export);
 endfunction : connect_phase
 
 
