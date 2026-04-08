@@ -20,6 +20,10 @@ class top_scoreboard extends uvm_scoreboard;
   
   int unsigned debug_counter = 0;
 
+  bit debounce_done;
+  bit value_to_load;
+
+
   extern function new(string name, uvm_component parent);
 
   extern function void build_phase(uvm_phase phase);
@@ -60,16 +64,16 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   // Compare received vs reference model
   is_equal = received_trans.compare(reference_trans);
 
-  if (debug_counter < 1100) begin
-    `uvm_info(get_type_name(), {"\nDEBUG\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
-    debug_counter++;
-  end
+  // if (debug_counter < 1100) begin
+  //   `uvm_info(get_type_name(), {"\nDEBUG\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
+  //   debug_counter++;
+  // end
 
   // Statistics
   if (is_equal) begin
     m_num_passed++;
   end else begin
-    // `uvm_info(get_type_name(), {"\nMISMATCH\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
+    `uvm_info(get_type_name(), {"\nMISMATCH\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
     m_num_failed++;
   end
   
@@ -78,7 +82,6 @@ endfunction : write_observed
 
 function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit sw);
   debouncer_uvc_sequence_item prediction;
-  bit debounce_done;
 
   prediction = debouncer_uvc_sequence_item::type_id::create("prediction");
 
@@ -91,31 +94,37 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
     sync_counter  = 0;
   end else begin
 
-    // Phase 1: generate outputs form old state
     tick_state = 1'b0;
-    debounce_done = (cycle_counter == 100);
-
-    if (debounce_done) begin
-      if (level_state == 1'b0 && sw_state == 1'b1) begin
-        tick_state = 1'b1;
-      end
-      level_state = sw_state;
+    
+    // Count for the debounce time
+    if (cycle_counter == 99) begin
+      debounce_done = 1;
+      value_to_load = sw_state;
+      sync_counter = 0;
     end
 
-    // Phase 2: update model state for next cycle
+    // Check for any change in the input
     if (sw != sw_state) begin
-      sw_state = sw;
-      sync_counter = 0;
       cycle_counter = 0;
     end else begin
-      if (sync_counter < 2) begin
-        sync_counter++;
-      end else if (!debounce_done) begin
-        cycle_counter++;
-      end
+      cycle_counter++;
     end
     
-
+    // Wait for two cycles
+    if (debounce_done) begin
+      sync_counter++;
+    end
+    
+    if (sync_counter == 2) begin
+      if (level_state == 1'b0 && value_to_load == 1'b1) begin
+        tick_state = 1'b1;
+      end
+      level_state = value_to_load;
+      debounce_done = 0;
+    end
+    
+    // Update state
+    sw_state = sw;
   end
 
   prediction.m_rst_i = rst;
@@ -125,6 +134,7 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
   prediction.m_cycle = cycle_counter;
   
   return prediction;
+
 endfunction : debouncer_ref
 
 
