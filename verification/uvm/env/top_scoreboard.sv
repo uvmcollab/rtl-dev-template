@@ -20,7 +20,7 @@ class top_scoreboard extends uvm_scoreboard;
   
   int unsigned debug_counter = 0;
 
-  bit debounce_done;
+  bit debounce_condition;
   bit value_to_load;
 
 
@@ -80,6 +80,11 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
 endfunction : write_observed
 
 
+// Spec model:
+// 1. If sw remains unchanged for CounterMax cycles, counting cycles 0..CounterMax-1,
+//    the value is accepted as debounced.
+// 2. Outputs respond 2 cycles later.
+// 3. db_tick_o pulses for one cycle only on a debounced 0->1 transition.
 function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit sw);
   debouncer_uvc_sequence_item prediction;
 
@@ -87,21 +92,18 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
 
   // Reset logic
   if (rst) begin
+    debounce_condition = 0;
+
     cycle_counter = 0;
+    sync_counter  = 0;
+
     sw_state      = 1'b0;
     level_state   = 1'b0;
     tick_state    = 1'b0;
-    sync_counter  = 0;
   end else begin
 
+    // Default value for tick
     tick_state = 1'b0;
-    
-    // Count for the debounce time
-    if (cycle_counter == 99) begin
-      debounce_done = 1;
-      value_to_load = sw_state;
-      sync_counter = 0;
-    end
 
     // Check for any change in the input
     if (sw != sw_state) begin
@@ -109,18 +111,27 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
     end else begin
       cycle_counter++;
     end
-    
-    // Wait for two cycles
-    if (debounce_done) begin
+
+    // Two cycle latency
+    if (debounce_condition) begin
       sync_counter++;
     end
     
+    // Debounce condition
+    if (cycle_counter == 99) begin
+      debounce_condition = 1;
+      value_to_load = sw;
+      sync_counter = 0;
+    end
+
+    // Assert level and assert tick for one clock cycle
     if (sync_counter == 2) begin
       if (level_state == 1'b0 && value_to_load == 1'b1) begin
         tick_state = 1'b1;
       end
       level_state = value_to_load;
-      debounce_done = 0;
+      debounce_condition = 0;
+      sync_counter = 0;
     end
     
     // Update state
