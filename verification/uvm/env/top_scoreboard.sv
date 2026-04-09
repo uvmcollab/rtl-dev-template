@@ -70,6 +70,10 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
     m_num_failed++;
   end
   
+  if (m_num_failed > 500) begin
+    `uvm_fatal(get_name(), $sformatf("\nNumber of failures exceeded. FAILED: %4d", m_num_failed))
+  end
+  
 endfunction : write_observed
 
 
