@@ -11,8 +11,6 @@ class debouncer_uvc_monitor extends uvm_monitor;
   debouncer_uvc_config        m_config;
   debouncer_uvc_sequence_item m_trans;
   
-  int unsigned cycle = 0;
-
   extern function new(string name, uvm_component parent);
 
   extern function void build_phase(uvm_phase phase);
@@ -41,17 +39,18 @@ endtask : run_phase
 task debouncer_uvc_monitor::do_mon();
   forever begin
 
+    // Monitor each cycle
     @(vif.cb_mon);
-    cycle++;
 
+    // Pass everything to transaction
     m_trans.m_rst_i = vif.rst_i;
     m_trans.m_sw_i = vif.sw_i;
     m_trans.m_db_level_o = vif.db_level_o;
     m_trans.m_db_tick_o = vif.db_tick_o;
-
     m_trans.m_sample_time = $realtime;
-    m_trans.m_cycle = cycle;
+    m_trans.m_cycle = 0;
     
+    // Send transaction
     analysis_port.write(m_trans);
   end
 endtask : do_mon

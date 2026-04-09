@@ -52,10 +52,12 @@ function bit debouncer_uvc_sequence_item::do_compare(uvm_object rhs, uvm_compare
   result = super.do_compare(rhs, comparer);
   // result &= (m_rst_i       == rhs_.m_rst_i);
   // result &= (m_sw_i        == rhs_.m_sw_i);
-  result &= (m_db_level_o  == rhs_.m_db_level_o);
-  result &= (m_db_tick_o   == rhs_.m_db_tick_o);
   // result &= (m_sample_time == rhs_.m_sample_time);
   // result &= (m_cycle       == rhs_.m_cycle);
+
+  // Just compare outputs
+  result &= (m_db_level_o  == rhs_.m_db_level_o);
+  result &= (m_db_tick_o   == rhs_.m_db_tick_o);
   return result;
 endfunction : do_compare
 
@@ -73,8 +75,8 @@ function string debouncer_uvc_sequence_item::convert2string();
   $sformat(s, {s, "\n", "m_sw_i = %d"}, m_sw_i);
   $sformat(s, {s, "\n", "m_db_level_o = %d"}, m_db_level_o);
   $sformat(s, {s, "\n", "m_db_tick_o = %d"}, m_db_tick_o);
-  $sformat(s, {s, "\n", "m_sample_time = %d"}, m_sample_time);
-  $sformat(s, {s, "\n", "m_cycle = %d"}, m_cycle);
+  $sformat(s, {s, "\n", "m_sample_time = %10t"}, m_sample_time);
+  $sformat(s, {s, "\n", "m_cycle = %4d"}, m_cycle);
   return s;
 endfunction : convert2string
 

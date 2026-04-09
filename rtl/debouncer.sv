@@ -8,13 +8,13 @@
 // [Notes]          Tick output is useful to test FSMs
 //                  Level output emulates a Schmitt trigger
 //                  ClkFreq:    is the FPGA frequency
-//                  StableTime: is the waiting time in ms
+//                  StableTime: is the waiting time in us
 //                  Example:
 //                    ClkFreq    = 100_000_000    ->   100 MHz
-//                    StableTime =          10    ->    10 ms
+//                    StableTime =           1    ->     1 us
 //                  Then:
-//                    CounterMax   = ClkFreq*StableTime/1000 = 1_000_000
-//                    CounterWidth = $clog2(CounterMax) = 20
+//                    CounterMax   = ClkFreq*StableTime/1_000_000 = 100
+//                    CounterWidth = $clog2(CounterMax) = 7
 //                  To increase the precision it is possible to change
 //                  from ms to us or even to ns but you must adjust the
 //                  division factor accordingly.
@@ -25,7 +25,7 @@
 
 module debouncer #(
     parameter int ClkFreq    = 100_000_000,
-    parameter int StableTime = 10
+    parameter int StableTime = 1
 ) (
     input  logic clk_i,
     input  logic rst_i,

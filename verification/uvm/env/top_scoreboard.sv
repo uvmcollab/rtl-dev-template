@@ -62,11 +62,6 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   // Compare received vs reference model
   is_equal = received_trans.compare(reference_trans);
 
-  // if (debug_counter < 1100) begin
-  //   `uvm_info(get_type_name(), {"\nDEBUG\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
-  //   debug_counter++;
-  // end
-
   // Statistics
   if (is_equal) begin
     m_num_passed++;

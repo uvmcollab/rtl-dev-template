@@ -33,7 +33,7 @@ function void top_env::build_phase(uvm_phase phase);
     `uvm_fatal(get_name(), "Could not retrieve top_env_config from config db")
   end
 
-  // ===================== AGENT  INSTANTIATION ===================== //
+  // ===================== AGENT INSTANTIATION ===================== //
   m_debouncer_uvc_config = debouncer_uvc_config::type_id::create("m_debouncer_uvc_config");
   m_debouncer_uvc_config.is_active = UVM_ACTIVE;
   if (!uvm_config_db #(virtual debouncer_uvc_if)::get(this, "m_debouncer_uvc_agent", "vif", m_debouncer_uvc_config.vif)) begin
