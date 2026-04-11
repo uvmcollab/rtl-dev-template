@@ -1,0 +1,105 @@
+##=============================================================================
+## [Filename]       Makefile.dpi
+## [Project]        rtl-dev-template
+## [Author]         Ciro Bermudez - cirofabian.bermudez@gmail.com
+## [Language]       GNU Makefile
+## [Created]        Apr 2026
+## [Modified]       -
+## [Description]    Makefile to manage C++ DPI reference model
+## [Notes]          Simulation mode and SystemVerilog DPI mode
+## [Status]         stable
+## [Revisions]      -
+##=============================================================================
+
+# ===============================  VARIABLES  =================================
+
+CUR_DATE := $(shell date +%Y-%m-%d_%H-%M-%S)
+
+SRC_DIR := src
+OBJ_DIR := obj
+BIN_DIR := bin
+INC_DIR := include
+
+GIT_DIR  := $(shell git rev-parse --show-toplevel)
+ROOT_DIR := $(CURDIR)
+
+CXX      := g++
+CXXFLAGS := -Wall -Wextra -std=c++17 -I ./$(INC_DIR)
+LDFLAGS  :=
+
+TARGET := $(BIN_DIR)/app
+LIB_SO := $(ROOT_DIR)/libhack.so
+
+SRCS := $(shell find $(SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "dbouncer_dpi.cpp")
+OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter %.cpp,$(SRCS)))
+OBJS += $(patsubst $(SRC_DIR)/%.cc,$(OBJ_DIR)/%.o,$(filter %.cc,$(SRCS)))
+
+DPI_WRAPPER_SRC := $(SRC_DIR)/dbouncer_dpi.cpp
+DPI_MODEL_SRC   := $(SRC_DIR)/debouncer_model.cpp
+
+ifeq ($(strip $(VCS_HOME)),)
+  DPI_INCLUDES :=
+else
+  DPI_INCLUDES := -I $(VCS_HOME)/include
+endif
+
+C_RED := \033[31m
+C_GRE := \033[32m
+C_BLU := \033[34m
+C_LBL := \033[36m
+C_YEL := \033[33m
+C_ORA := \033[38;5;214m
+NC    := \033[0m
+
+# ================================  TARGETS  ==================================
+
+.DEFAULT_GOAL := all
+
+.PHONY: all
+all: help
+
+.PHONY: compile
+compile: $(TARGET) ## Compile simulation-mode app
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo -e "$(C_ORA)Compiled: $< -> $@ $(NC)"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc
+	@mkdir -p $(dir $@)
+	@echo -e "$(C_ORA)Compiled: $< -> $@ $(NC)"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(TARGET): $(OBJS)
+	@mkdir -p $(BIN_DIR)
+	@echo -e "$(C_ORA)Linked: $@ $(NC)"
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
+
+.PHONY: run
+run: ## Run C++ reference model (simulation mode)
+	@echo -e "$(C_ORA)Running $(TARGET) $(NC)"
+	./$(TARGET)
+
+.PHONY: compile-dpi
+compile-dpi: ## Build shared library for SystemVerilog DPI mode
+	@echo -e "$(C_ORA)Building DPI shared library $(LIB_SO)$(NC)"
+	@if [ -z "$(VCS_HOME)" ]; then \
+		echo -e "$(C_RED)Error: VCS_HOME is not set. Source your Synopsys setup before compile-dpi.$(NC)"; \
+		exit 1; \
+	fi
+	$(CXX) -fPIC -shared $(CXXFLAGS) $(DPI_INCLUDES) $(DPI_WRAPPER_SRC) $(DPI_MODEL_SRC) -o $(LIB_SO)
+
+.PHONY: clean
+clean: ## Remove compilation and executable files
+	@echo -e "$(C_ORA)Removing compilation files$(NC)"
+	rm -rf $(OBJ_DIR) $(BIN_DIR) $(LIB_SO)
+
+.PHONY: help
+help: ## Display help message
+	@echo "======================================================================"
+	@echo -e "                           $(C_BLU) MAKEFILE.DPI $(NC) "
+	@echo "======================================================================"
+	@echo "Usage: make <target> <variables>"
+	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_LBL)%-15s$(NC) %s\n", $$1, $$2}'
+	@echo "======================================================================"
