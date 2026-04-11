@@ -54,7 +54,7 @@ From the root directory run the following:
 ```bash
 export GIT_ROOT="$(git rev-parse --show-toplevel)"
 export UVM_WORK="$GIT_ROOT/work/uvm"
-export UVM_SCRIPTS = "$GIT_ROOT/verification/uvm/scripts"
+export UVM_SCRIPTS="$GIT_ROOT/verification/uvm/scripts"
 mkdir -p "$UVM_WORK" && cd "$UVM_WORK"
 ln -sf $UVM_SCRIPTS/makefiles/Makefile.vcs Makefile
 ln -sf $UVM_SCRIPTS/setup/setup_synopsys_eda.sh
