@@ -95,7 +95,7 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE =
+DPI_FILE = -sv_lib $(DPI_DIR)/libhack
 
 # UVCs
 UVCS = -F $(UVM_DIR)/debouncer_uvc.f
@@ -250,7 +250,7 @@ verdi-cov: ## UVM: Open coverage report in Verdi
 .PHONY: compile-dpi
 compile-dpi: ## TB: Run dpi (C/C++) compilation
 	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
-	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
+	$(MAKE) -C $(DPI_DIR) -f Makefile.dpi compile-dpi
 # -fPIC Flag to generate position-independent code (shared library)
 # If you want to compile dpi repeatedly and include the .o to simv
 # but it's better to compile from vcs command
