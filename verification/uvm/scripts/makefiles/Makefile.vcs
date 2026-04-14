@@ -95,7 +95,7 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE = -sv_lib $(DPI_DIR)/libhack
+DPI_FILE = -sv_lib $(DPI_DIR)/libdebouncer
 
 # UVCs
 UVCS = -F $(UVM_DIR)/debouncer_uvc.f
