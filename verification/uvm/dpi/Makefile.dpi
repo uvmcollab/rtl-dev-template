@@ -28,7 +28,7 @@ CXXFLAGS := -Wall -Wextra -std=c++17 -I ./$(INC_DIR)
 LDFLAGS  :=
 
 TARGET := $(BIN_DIR)/app
-LIB_SO := $(ROOT_DIR)/libhack.so
+LIB_SO := $(ROOT_DIR)/libdebouncer.so
 
 SRCS := $(shell find $(SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "dbouncer_dpi.cpp")
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter %.cpp,$(SRCS)))
