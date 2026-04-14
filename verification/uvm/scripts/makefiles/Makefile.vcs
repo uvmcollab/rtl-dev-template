@@ -72,7 +72,7 @@ endif
 
 # Code Coverage switch [true, false]
 ifeq ($(ENABLE_CODE_COV),true)
-	COV_FLAGS_VCS  = $(COV_FLAGS_COMMON) -cm_dir $(RUN_DIR)/$(COV_NAME) 
+	COV_FLAGS_VCS  = $(COV_FLAGS_COMMON) -cm_dir $(RUN_DIR)/$(COV_NAME)
 	COV_FLAGS_SIMV = $(COV_FLAGS_COMMON)
 endif
 
@@ -95,13 +95,13 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE = -sv_lib $(DPI_DIR)/libdebouncer
+DPI_FILE = -sv_lib $(DPI_DIR)/libdebouncer.so
 
 # UVCs
 UVCS = -F $(UVM_DIR)/debouncer_uvc.f
 
 # Synopsys VCS/SIMV/URG/EMAN/VERDI options
-FILES = $(UVCS) $(RTL_FILES) $(SVE) 
+FILES = $(UVCS) $(RTL_FILES) $(SVE)
 
 VCS_FLAGS = -full64 -sverilog \
 			-ntb_opts uvm-1.2 \
@@ -139,7 +139,7 @@ C_BLU := \033[34m
 C_LBL := \033[36m
 C_YEL := \033[33m
 C_ORA := \033[38;5;214m
-NC    := \033[0m 
+NC    := \033[0m
 
 # Synopsys tools
 SYNOPSYS_TOOLS = vcs urg verdi wv
