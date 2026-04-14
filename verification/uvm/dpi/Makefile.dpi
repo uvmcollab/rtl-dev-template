@@ -25,7 +25,7 @@ GIT_DIR  := $(shell git rev-parse --show-toplevel)
 ROOT_DIR := $(CURDIR)
 
 CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I ./$(INC_DIR) -I .
+CXXFLAGS := -Wall -Wextra -std=c++17 -I ./$(INC_DIR)
 LDFLAGS  :=
 
 TARGET := $(BIN_DIR)/app
