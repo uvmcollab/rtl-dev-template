@@ -1,14 +1,25 @@
+//==============================================================================
+// [Filename]     sim.cpp
+// [Project]      rtl-dev-template
+// [Author]       Ciro Bermudez - cirofabian.bermudez@gmail.com
+// [Language]     C++
+// [Created]      Apr 2026
+// [Modified]     -
+// [Description]  Standalone simulation entry point for the debouncer model
+// [Notes]        -
+// [Status]       stable
+// [Revisions]    -
+//==============================================================================
+
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <string>
-#include <vector>
 
-#include "debouncer_model.hpp"
+#include "debouncer.h"
 
 namespace {
 
-void run_vector(DebouncerModel& model, bool rst, bool sw, std::size_t cycle) {
+void run_vector(Debouncer& model, bool rst, bool sw, std::size_t cycle) {
   const DebouncerPrediction y = model.step(rst, sw);
   std::cout << "cycle=" << std::setw(4) << cycle << " rst=" << rst << " sw=" << sw
             << " db_level_o=" << y.db_level_o << " db_tick_o=" << y.db_tick_o
@@ -18,7 +29,7 @@ void run_vector(DebouncerModel& model, bool rst, bool sw, std::size_t cycle) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  DebouncerModel model;
+  Debouncer model;
 
   std::size_t total_cycles = 140;
   if (argc > 1) {

@@ -29,6 +29,7 @@ VERDI_DIR   := $(SCRIPTS_DIR)/verdi
 UVCS_DIR    := $(UVM_DIR)/uvcs
 RTL_DIR     := $(GIT_DIR)/rtl
 DPI_DIR     := $(UVM_DIR)/dpi
+DPI_LIB     := $(DPI_DIR)/lib/libdebouncer.so
 REGR_DIR    := $(ROOT_DIR)/regression
 MERGE_DIR   := $(ROOT_DIR)/merge_cov
 
@@ -95,7 +96,7 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE = -sv_lib $(DPI_DIR)/libdebouncer.so
+DPI_FILE = -sv_lib $(DPI_LIB)
 
 # UVCs
 UVCS = -F $(UVM_DIR)/debouncer_uvc.f
@@ -206,7 +207,7 @@ vars: ## UVM: Print Makefile variables
 #______________________________________________________________________________
 
 .PHONY: compile
-compile: ## UVM: Runs VCS compilation
+compile: compile-dpi ## UVM: Runs VCS compilation
 	@echo -e "$(C_ORA)Compiling UVM project$(NC)"
 	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
 	cd $(RUN_DIR) && vcs $(VCS_FLAGS)

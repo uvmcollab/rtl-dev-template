@@ -1,8 +1,21 @@
-#include "debouncer_model.hpp"
+//==============================================================================
+// [Filename]     debouncer.cpp
+// [Project]      rtl-dev-template
+// [Author]       Ciro Bermudez - cirofabian.bermudez@gmail.com
+// [Language]     C++
+// [Created]      Apr 2026
+// [Modified]     -
+// [Description]  Debouncer reference model implementation
+// [Notes]        -
+// [Status]       stable
+// [Revisions]    -
+//==============================================================================
 
-DebouncerModel::DebouncerModel() { reset(); }
+#include "debouncer.h"
 
-void DebouncerModel::reset() {
+Debouncer::Debouncer() { reset(); }
+
+void Debouncer::reset() {
   cycle_counter_ = 0;
   sync_counter_ = 0;
   sw_state_ = false;
@@ -11,7 +24,7 @@ void DebouncerModel::reset() {
   value_to_load_ = false;
 }
 
-DebouncerPrediction DebouncerModel::step(bool rst, bool sw) {
+DebouncerPrediction Debouncer::step(bool rst, bool sw) {
   if (rst) {
     reset();
   } else {
