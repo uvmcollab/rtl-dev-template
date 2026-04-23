@@ -29,6 +29,7 @@ VERDI_DIR   := $(SCRIPTS_DIR)/verdi
 UVCS_DIR    := $(UVM_DIR)/uvcs
 RTL_DIR     := $(GIT_DIR)/rtl
 DPI_DIR     := $(UVM_DIR)/dpi
+DPI_LIB     := $(DPI_DIR)/lib/libdebouncer.so
 REGR_DIR    := $(ROOT_DIR)/regression
 MERGE_DIR   := $(ROOT_DIR)/merge_cov
 
@@ -72,7 +73,7 @@ endif
 
 # Code Coverage switch [true, false]
 ifeq ($(ENABLE_CODE_COV),true)
-	COV_FLAGS_VCS  = $(COV_FLAGS_COMMON) -cm_dir $(RUN_DIR)/$(COV_NAME) 
+	COV_FLAGS_VCS  = $(COV_FLAGS_COMMON) -cm_dir $(RUN_DIR)/$(COV_NAME)
 	COV_FLAGS_SIMV = $(COV_FLAGS_COMMON)
 endif
 
@@ -95,13 +96,13 @@ endif
 RTL_FILES = $(RTL_DIR)/debouncer.sv
 SVE = -F $(UVM_DIR)/sve.f
 VERDI_FILE = $(VERDI_DIR)/verdi.tcl
-DPI_FILE =
+DPI_FILE = -sv_lib $(DPI_LIB)
 
 # UVCs
 UVCS = -F $(UVM_DIR)/debouncer_uvc.f
 
 # Synopsys VCS/SIMV/URG/EMAN/VERDI options
-FILES = $(UVCS) $(RTL_FILES) $(SVE) 
+FILES = $(UVCS) $(RTL_FILES) $(SVE)
 
 VCS_FLAGS = -full64 -sverilog \
 			-ntb_opts uvm-1.2 \
@@ -139,7 +140,7 @@ C_BLU := \033[34m
 C_LBL := \033[36m
 C_YEL := \033[33m
 C_ORA := \033[38;5;214m
-NC    := \033[0m 
+NC    := \033[0m
 
 # Synopsys tools
 SYNOPSYS_TOOLS = vcs urg verdi wv
@@ -206,7 +207,7 @@ vars: ## UVM: Print Makefile variables
 #______________________________________________________________________________
 
 .PHONY: compile
-compile: ## UVM: Runs VCS compilation
+compile: compile-dpi ## UVM: Runs VCS compilation
 	@echo -e "$(C_ORA)Compiling UVM project$(NC)"
 	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
 	cd $(RUN_DIR) && vcs $(VCS_FLAGS)
@@ -250,7 +251,7 @@ verdi-cov: ## UVM: Open coverage report in Verdi
 .PHONY: compile-dpi
 compile-dpi: ## TB: Run dpi (C/C++) compilation
 	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
-	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
+	$(MAKE) -C $(DPI_DIR) -f Makefile.dpi compile-dpi
 # -fPIC Flag to generate position-independent code (shared library)
 # If you want to compile dpi repeatedly and include the .o to simv
 # but it's better to compile from vcs command
