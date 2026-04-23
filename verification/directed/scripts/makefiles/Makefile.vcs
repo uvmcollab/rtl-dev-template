@@ -189,6 +189,11 @@ vars: ## TB: Print Makefile variables
 	@echo "COV_FLAGS_VCS    = $(COV_FLAGS_VCS)"
 	@echo "COV_FLAGS_SIMV   = $(COV_FLAGS_SIMV)"
 	@echo "PID              = $$$$"
+	@echo -e "$(C_ORA)FILES $(NC)"
+	@echo "RTL_FILES        = $(RTL_FILES)"
+	@echo "SVE              = $(SVE)"
+	@echo "VERDI_FILE       = $(VERDI_FILE)"
+	@echo "DPI_FILE         = $(DPI_FILE)"
 	@echo ""
 #______________________________________________________________________________
 
