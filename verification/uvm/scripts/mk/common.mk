@@ -93,9 +93,10 @@ SEED       ?= 5081996
 SEED_FLAGS ?=
 
 JOB_NAME  ?= debug
+SIMV_NAME ?= simv
 
 SEED_VARS     := SEED SEED_MODE SEED_FLAGS
-TEST_RUN_VARS := TEST VERBOSITY SEED SEED_MODE JOB_NAME
+TEST_RUN_VARS := TEST VERBOSITY SEED SEED_MODE JOB_NAME SIMV_NAME
 
 # Compile extra arguments
 VCS_DEFINES ?= +define+GIT_DIR=\"$(GIT_DIR)\"
@@ -189,6 +190,7 @@ VCS_FLAGS = -full64 -sverilog \
 			-l $(LOGS_DIR)/$(CUR_DATE)_comp.log \
 			-top tb \
 			-j8 \
+			-o $(SIMV_NAME) \
 			$(VCS_DEFINES) \
 			$(COV_FLAGS_VCS) \
 			$(SVA_FLAGS_VCS) \
@@ -199,6 +201,7 @@ SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
 			+UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
 			+UVM_TR_RECORD +UVM_LOG_RECORD \
 			+UVM_NO_RELNOTES \
+			-l $(LOGS_DIR)/$(CUR_DATE)_simv.log \
 			$(COV_FLAGS_SIMV) \
 			$(SVA_FLAGS_SIMV) \
 			$(RUN_ARGS) \
@@ -233,6 +236,20 @@ CONTROL_VARS := \
 
 SYNOPSYS_TOOLS = vcs urg verdi wv
 
+# =================================== MACROS ===================================
+
+# -------------------------------- COMPILATION ---------------------------------
+
+define run_compile
+	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling UVM project"
+	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
+	cd $(RUN_DIR) && vcs $(VCS_FLAGS)
+endef
+
+# --------------------------------- SIMULATION ---------------------------------
+
+
+
 # ================================  TARGETS  ==================================
 .DEFAULT_GOAL := all
 SHELL         := bash
@@ -241,13 +258,13 @@ SHELL         := bash
 all: help
 #______________________________________________________________________________
 
-.PHONY: tools-check
-tools-check: ## UVM: Check required Synopsys tools
+.PHONY: check-tools
+check-tools: ## UVM: Check required Synopsys tools
 	@printf "$(C_CYN)%s$(C_RST)\n" "Checking Synopsys tools..."
 	@for tool in $(SYNOPSYS_TOOLS); do \
 		if ! command -v $$tool >/dev/null 2>&1; then \
 			printf "$(C_RED)%-7s is MISSING$(C_RST)\n" "$$tool"; \
-			printf "Please source synopsys_eda_setup.sh before running make targets\n"; \
+			printf "Please source synopsys_eda_setup.[tc]sh before running Make targets\n"; \
 			exit 1; \
 		else \
 			printf "$(C_GRN)%-7s FOUND$(C_RST)\n" "$$tool"; \
@@ -256,8 +273,8 @@ tools-check: ## UVM: Check required Synopsys tools
 	@printf "$(C_GRN)%s$(C_RST)\n" "All Synopsys tools are available"
 #______________________________________________________________________________
 
-.PHONY: vars
-vars: ## UVM: Print Makefile variables
+.PHONY: print-vars
+print-vars: ## UVM: Print Makefile variables
 	$(call print_vars,Directory variables,$(DIR_VARS))
 	$(call print_vars,Test variables,$(TEST_RUN_VARS))
 	$(call print_vars,Seed variables,$(SEED_VARS))
@@ -272,9 +289,7 @@ vars: ## UVM: Print Makefile variables
 
 .PHONY: compile
 compile: ## UVM: Runs VCS compilation
-	@echo -e "$(C_ORA)Compiling UVM project$(NC)"
-	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
-	cd $(RUN_DIR) && vcs $(VCS_FLAGS)
+	$(run_compile)
 #______________________________________________________________________________
 
 .PHONY: sim
