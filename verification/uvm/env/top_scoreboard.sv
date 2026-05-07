@@ -55,6 +55,7 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   // Capture transaction from monitor
   received_trans = debouncer_uvc_sequence_item::type_id::create("received_trans");
   received_trans.copy(t);
+
   
   // Reference model
   reference_trans = debouncer_ref(received_trans.m_rst_i, received_trans.m_sw_i);
@@ -66,12 +67,18 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   if (is_equal) begin
     m_num_passed++;
   end else begin
+
+    // Transaction recording to for verdi Protocol Analyzer
+    accept_tr(received_trans);
+    void'(begin_tr(received_trans, get_full_name()));
+    end_tr(received_trans);
+
     `uvm_info(get_type_name(), {"\nMISMATCH\n","\nRECEIVED:", received_trans.convert2string(), "\n", "\nREFMODEL:", reference_trans.convert2string(), "\n"}, UVM_MEDIUM)
     m_num_failed++;
   end
   
   // Stop condition
-  if (m_num_failed > 500) begin
+  if (m_num_failed >= 500) begin
     `uvm_fatal(get_name(), $sformatf("\nNumber of failures exceeded. FAILED: %4d", m_num_failed))
   end
   

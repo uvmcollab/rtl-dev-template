@@ -14,9 +14,12 @@
 
 # Dump signals to FSDB (RECOMMENDED)
 dump -file novas.fsdb -type FSDB
-dump -add tb.dut -depth 1 -ports -fid FSDB0
+dump -add tb.dut -depth 0 -fid FSDB0 -fsdb_opt +sva
 run
 quit
+
+# to dump assertions -fsdb_opt +sva
+# or use -fsdb_opt +all
 
 # Dump signals to FSDB (RECOMMENDED)
 # dump -file novas.fsdb -type FSDB

@@ -22,6 +22,7 @@ class debouncer_uvc_sequence_item extends uvm_sequence_item;
   extern function void do_copy(uvm_object rhs);
   extern function bit do_compare(uvm_object rhs, uvm_comparer comparer);
   extern function void do_print(uvm_printer printer);
+  extern function void do_record(uvm_recorder recorder);
   extern function string convert2string();
 
 endclass : debouncer_uvc_sequence_item
@@ -66,6 +67,22 @@ function void debouncer_uvc_sequence_item::do_print(uvm_printer printer);
   if (printer.knobs.sprint == 0) `uvm_info(get_type_name(), convert2string(), UVM_MEDIUM)
   else printer.m_string = convert2string();
 endfunction : do_print
+
+
+function void debouncer_uvc_sequence_item::do_record(uvm_recorder recorder);
+  super.do_record(recorder);
+  // Random values
+  `uvm_record_field("m_cycles_asserted", m_cycles_asserted)
+  `uvm_record_field("m_cycles_deasserted", m_cycles_deasserted)
+
+  // Monitor 
+  `uvm_record_field("m_rst_i", m_rst_i)
+  `uvm_record_field("m_sw_i", m_sw_i)
+  `uvm_record_field("m_db_level_o", m_db_level_o)
+  `uvm_record_field("m_db_tick_o", m_db_tick_o)
+  `uvm_record_field("m_sample_time", m_sample_time)
+  `uvm_record_field("m_cycle", m_cycle)
+endfunction : do_record
 
 
 function string debouncer_uvc_sequence_item::convert2string();

@@ -76,7 +76,6 @@ endfunction : signature
 
 
 task top_test_vseq::debouncer_uvc_seq(int unsigned cycles_asserted, int unsigned cycles_deasserted);
-  // Write your sequence here
   debouncer_uvc_sequence_base seq;
   seq = debouncer_uvc_sequence_base::type_id::create("seq");
   if (!seq.randomize() with {
