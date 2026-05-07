@@ -58,8 +58,9 @@ ROOT_DIR      := $(CURDIR)
 BUILD_DIR     := $(ROOT_DIR)/build
 RUN_DIR       := $(ROOT_DIR)/sim
 LOGS_DIR      := $(ROOT_DIR)/logs
+VERDI_DIR     := $(ROOT_DIR)/verdi
 COV_DIR       := $(ROOT_DIR)/cov
-WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR COV_DIR
+WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
 
 # ---------------------------------- SCRIPTS -----------------------------------
 SCRIPTS_DIR      := $(TB_DIR)/scripts
@@ -93,13 +94,26 @@ SEED_MODE  ?= fixed
 SEED       ?= 5081996
 SEED_FLAGS ?=
 
-JOB_NAME  ?= debug
 SIMV_NAME ?= simv
+JOB_NAME  ?= debug
+SIMV_DIR  = $(BUILD_DIR)/$(SIMV_NAME)
+JOB_DIR   = $(RUN_DIR)/$(JOB_NAME)
 
-SIMV_PATH = $(BUILD_DIR)/$(SIMV_NAME)
+WORKSPACE_DIR_VARS := SIMV_DIR JOB_DIR
+WORKSPACE_VARS := SIMV_NAME JOB_NAME $(WORKSPACE_DIR_VARS) 
 
-SEED_VARS     := SEED SEED_MODE SEED_FLAGS
-TEST_RUN_VARS := TEST VERBOSITY SEED SEED_MODE JOB_NAME SIMV_NAME SIMV_PATH
+UCLI_FILE  ?= dump.tcl
+UCLI_FLAGS ?= -ucli -do $(TCL_DIR)/$(UCLI_FILE)
+
+UCLI_VARS := UCLI_FILE UCLI_FLAGS
+
+SEED_VARS := SEED SEED_MODE SEED_FLAGS
+
+TEST_RUN_VARS := TEST VERBOSITY \
+				SEED SEED_MODE \
+				SIMV_NAME JOB_NAME \
+				SIMV_DIR JOB_DIR \
+				UCLI_FILE UCLI_FLAGS
 
 # Compile extra arguments
 VCS_DEFINES ?= +define+GIT_DIR=\"$(GIT_DIR)\"
@@ -126,7 +140,7 @@ COV_NAME         ?= $(SIMV_NAME)_cov
 COV_FLAGS_COMMON ?= -cm $(CODE_COV_TYPES)
 
 # Compile always supports coverage
-COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(SIMV_PATH)/$(COV_NAME) 
+COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(SIMV_DIR)/$(COV_NAME) 
 
 # Runtime collection is optional
 COV_FLAGS_SIMV   ?=
@@ -190,7 +204,7 @@ VCS_FLAGS = -full64 -sverilog \
 			-ntb_opts uvm-1.2 \
 			-lca -debug_access+all -kdb \
 			-timescale=1ps/100fs $(FILES) \
-			-l $(SIMV_PATH)/$(CUR_DATE)_compile.log \
+			-l $(SIMV_DIR)/$(CUR_DATE)_compile.log \
 			-top tb \
 			-j8 \
 			-o $(SIMV_NAME) \
@@ -204,19 +218,22 @@ SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
 			+UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
 			+UVM_TR_RECORD +UVM_LOG_RECORD \
 			+UVM_NO_RELNOTES \
-			-l $(LOGS_DIR)/$(CUR_DATE)_simv.log \
+			-no_save \
+			$(SEED_FLAGS) \
 			$(COV_FLAGS_SIMV) \
 			$(SVA_FLAGS_SIMV) \
-			$(RUN_ARGS) \
-			$(GUI_FLAGS)
+			$(UCLI_FLAGS) \
+			$(RUN_ARGS)
 
+# -l $(JOB_DIR)/$(CUR_DATE)_run.log \
+# Add a new target and flags for the gui mode $(GUI_FLAGS)
 # ------------------------------------ URG -------------------------------------
 URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
 			-log $(LOGS_DIR)/$(CUR_DATE)_cov.log \
 			-report $(COV_DIR) -dbname $(RUN_DIR)/merged.vdb -show tests
 
 # ----------------------------------- VERDI ------------------------------------
-VERDI_FLAGS     = -nologo -q -ssf $(RUN_DIR)/$(JOB_NAME)/novas.fsdb 
+VERDI_FLAGS     = -nologo -q -ssf $(JOB_DIR)/novas.fsdb 
 VERDI_COV_FLAGS = -nologo -q -cov -covdir $(RUN_DIR)/merged.vdb
 VERDI_PLAY      = -play $(VERDI_FILE)
 # VERDI_FLAGS    = -ssf $(RUN_DIR)/$(JOB_NAME)/novas.fsdb -dbdir simv.daidir -nologo -q
@@ -229,7 +246,8 @@ DIR_VARS := \
 	$(GENERAL_DIR_VARS) \
 	$(WORK_DIR_VARS) \
 	$(SCRIPTS_DIR_VARS) \
-	$(EXTRA_DIR_VARS)
+	$(EXTRA_DIR_VARS) \
+	$(WORKSPACE_DIR_VARS)
 
 CONTROL_VARS := \
 	ENABLE_GUI \
@@ -242,22 +260,24 @@ SYNOPSYS_TOOLS = vcs urg verdi wv
 # =================================== MACROS ===================================
 
 # -------------------------------- COMPILATION ---------------------------------
-
 define run_compile
 	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling project"
-	@mkdir -p $(BUILD_DIR)/$(SIMV_NAME) $(LOGS_DIR)
-	cd $(BUILD_DIR)/$(SIMV_NAME) && vcs $(VCS_FLAGS)
+	@mkdir -p $(SIMV_DIR) $(LOGS_DIR)
+	cd $(SIMV_DIR) && vcs $(VCS_FLAGS)
 endef
 
 # --------------------------------- SIMULATION ---------------------------------
-
 define run_sim
-	@printf "$(C_CYN)%s$(C_RST)\n" "Simulating project"
-	@mkdir -p $(RUN_DIR)/$(JOB_NAME) $(LOGS_DIR)
-	cd $(RUN_DIR) &&  $(VCS_FLAGS)
+	@printf "$(C_CYN)%s$(C_RST)\n" \
+		"Running simulation SEED=$(SEED_MODE) SEED=$(SEED)"
+	@mkdir -p $(JOB_DIR) $(LOGS_DIR)
+	@TEST_ID="$(CUR_DATE)_$(TEST)_$$$$"; \
+	LOG_FILE="-l $(JOB_DIR)/$${TEST_ID}_run.log"; \
+	COV_TEST_FLAGS="-cm_test $(TEST) -cm_name $${TEST_ID}"; \
+	cd $(JOB_DIR) && \
+	$(SIMV_DIR)/$(SIMV_NAME) $(SIMV_FLAGS) \
+		$${COV_TEST_FLAGS} $${LOG_FILE}
 endef
-
-
 
 # ================================  TARGETS  ==================================
 .DEFAULT_GOAL := all
@@ -285,8 +305,10 @@ check-tools: ## UVM: Check required Synopsys tools
 .PHONY: print-vars
 print-vars: ## UVM: Print Makefile variables
 	$(call print_vars,Directory variables,$(DIR_VARS))
+	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
 	$(call print_vars,Test variables,$(TEST_RUN_VARS))
 	$(call print_vars,Seed variables,$(SEED_VARS))
+	$(call print_vars,UCLI variables,$(UCLI_VARS))
 	$(call print_vars,Coverage variables,$(CODE_COV_VARS))
 	$(call print_vars,SVA variables,$(SVA_VARS))
 	$(call print_vars,Control variables,$(CONTROL_VARS))
@@ -303,23 +325,20 @@ compile: ## UVM: Runs VCS compilation
 
 .PHONY: sim
 sim: ## UVM: Runs simv simulation
-	@echo -e "$(C_ORA)Running simulation SEED_MODE=$(SEED_MODE) SEED=$(SEED)$(NC)"
-	@mkdir -p $(RUN_DIR)/$(JOB_NAME) $(LOGS_DIR)
-	TEST_ID="$(CUR_DATE)_$(TEST)_$$$$"; \
-	LOG_FILE="-l $(LOGS_DIR)/$${TEST_ID}_simv.log"; \
-	COV_FLAGS="-cm_test $(TEST) -cm_name $${TEST_ID}"; \
-	cd $(RUN_DIR)/$(JOB_NAME) && ./../simv $(SEED_FLAGS) $(SIMV_FLAGS) $${COV_FLAGS} $${LOG_FILE}
+	$(run_sim)
 #______________________________________________________________________________
 
 .PHONY: verdi
 verdi: ## UVM: Opens Verdi GUI
-	@echo -e "$(C_ORA)Openning Verdi$(NC)"
-	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) &
+	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
+		"Openning Verdi GUI" "$(JOB_NAME)"
+	@mkdir -p $(VERDI_DIR)
+	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
 #______________________________________________________________________________
 
 .PHONY: verdi-play
 verdi-play: ## UVM: Opens Verdi GUI running verdi.tcl file
-	@echo -e "$(C_ORA)Openning Verdi running verdi.cmd$(NC)"
+	@echo -e "$(C_ORA)Opening Verdi running verdi.cmd$(NC)"
 	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) $(VERDI_PLAY) &
 #______________________________________________________________________________
 
@@ -347,14 +366,15 @@ compile-dpi: ## TB: Run dpi (C/C++) compilation
 
 .PHONY: clean
 clean: ## UVM: Remove all simulation files
-	@echo -e "$(C_ORA)Removing all simulation files$(NC)"
-	rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
+	@rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
 #______________________________________________________________________________
 
-.PHONY: clean
-clean-logs: ## UVM: Remove logs
-	@echo -e "$(C_ORA)Removing all logs files$(NC)"
-	rm -rf $(LOGS_DIR)
+.PHONY: clean-logs
+clean-logs: ## UVM: Remove compilation and simulation logs
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing log files"
+	@find $(BUILD_DIR) -name "*_compile.log" -delete
+	@find $(RUN_DIR)   -name "*_run.log"     -delete
 #______________________________________________________________________________
 
 .PHONY: fsdb2vcd
