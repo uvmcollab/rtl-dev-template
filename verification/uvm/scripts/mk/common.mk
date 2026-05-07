@@ -55,10 +55,11 @@ GENERAL_DIR_VARS := GIT_DIR RTL_DIR VRF_DIR COMMON_DIR TB_DIR
 
 # ------------------------------------ WORK ------------------------------------
 ROOT_DIR      := $(CURDIR)
+BUILD_DIR     := $(ROOT_DIR)/build
 RUN_DIR       := $(ROOT_DIR)/sim
 LOGS_DIR      := $(ROOT_DIR)/logs
 COV_DIR       := $(ROOT_DIR)/cov
-WORK_DIR_VARS := ROOT_DIR RUN_DIR LOGS_DIR COV_DIR
+WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR COV_DIR
 
 # ---------------------------------- SCRIPTS -----------------------------------
 SCRIPTS_DIR      := $(TB_DIR)/scripts
@@ -95,8 +96,10 @@ SEED_FLAGS ?=
 JOB_NAME  ?= debug
 SIMV_NAME ?= simv
 
+SIMV_PATH = $(BUILD_DIR)/$(SIMV_NAME)
+
 SEED_VARS     := SEED SEED_MODE SEED_FLAGS
-TEST_RUN_VARS := TEST VERBOSITY SEED SEED_MODE JOB_NAME SIMV_NAME
+TEST_RUN_VARS := TEST VERBOSITY SEED SEED_MODE JOB_NAME SIMV_NAME SIMV_PATH
 
 # Compile extra arguments
 VCS_DEFINES ?= +define+GIT_DIR=\"$(GIT_DIR)\"
@@ -119,11 +122,11 @@ GUI_VARS   := ENABLE_GUI GUI_FLAGS
 # Options: [true, false]
 ENABLE_CODE_COV  ?= true
 CODE_COV_TYPES   ?= line+cond+fsm+branch+tgl+assert
-COV_NAME         ?= simv_cov
+COV_NAME         ?= $(SIMV_NAME)_cov
 COV_FLAGS_COMMON ?= -cm $(CODE_COV_TYPES)
 
 # Compile always supports coverage
-COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(RUN_DIR)/$(COV_NAME) 
+COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(SIMV_PATH)/$(COV_NAME) 
 
 # Runtime collection is optional
 COV_FLAGS_SIMV   ?=
@@ -176,7 +179,7 @@ endif
 # --------------------------------- FILE LISTS ---------------------------------
 RTL_FILELIST  = -F $(RTL_DIR)/rtl.f
 TB_FILELIST   = -F $(TB_DIR)/uvm.f
-UVCS_FILELIST = -F $(TB_DIR)/debouncer_uvc.f
+UVCS_FILELIST = -F $(TB_DIR)/uvcs.f
 FILES         = $(UVCS_FILELIST) $(RTL_FILELIST) $(TB_FILELIST)
 
 # ------------------------------------ DPI -------------------------------------
@@ -187,7 +190,7 @@ VCS_FLAGS = -full64 -sverilog \
 			-ntb_opts uvm-1.2 \
 			-lca -debug_access+all -kdb \
 			-timescale=1ps/100fs $(FILES) \
-			-l $(LOGS_DIR)/$(CUR_DATE)_comp.log \
+			-l $(SIMV_PATH)/$(CUR_DATE)_compile.log \
 			-top tb \
 			-j8 \
 			-o $(SIMV_NAME) \
@@ -241,12 +244,18 @@ SYNOPSYS_TOOLS = vcs urg verdi wv
 # -------------------------------- COMPILATION ---------------------------------
 
 define run_compile
-	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling UVM project"
-	@mkdir -p $(RUN_DIR) $(LOGS_DIR)
-	cd $(RUN_DIR) && vcs $(VCS_FLAGS)
+	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling project"
+	@mkdir -p $(BUILD_DIR)/$(SIMV_NAME) $(LOGS_DIR)
+	cd $(BUILD_DIR)/$(SIMV_NAME) && vcs $(VCS_FLAGS)
 endef
 
 # --------------------------------- SIMULATION ---------------------------------
+
+define run_sim
+	@printf "$(C_CYN)%s$(C_RST)\n" "Simulating project"
+	@mkdir -p $(RUN_DIR)/$(JOB_NAME) $(LOGS_DIR)
+	cd $(RUN_DIR) &&  $(VCS_FLAGS)
+endef
 
 
 
@@ -339,7 +348,7 @@ compile-dpi: ## TB: Run dpi (C/C++) compilation
 .PHONY: clean
 clean: ## UVM: Remove all simulation files
 	@echo -e "$(C_ORA)Removing all simulation files$(NC)"
-	rm -rf $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
+	rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
 #______________________________________________________________________________
 
 .PHONY: clean
