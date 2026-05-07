@@ -16,11 +16,8 @@
 ## [Revisions]      -
 ##==============================================================================
 
-# Configure directories
-set tcl_dir [file dirname [info script]]
-
-# Source dependencies
-source [file join $tcl_dir dump_lib.tcl]
+# Load library
+source $::env(DUMP_LIB_TCL)
 
 # Call function
 dump_none

@@ -66,8 +66,14 @@ WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
 SCRIPTS_DIR      := $(TB_DIR)/scripts
 MK_DIR           := $(SCRIPTS_DIR)/mk
 TCL_DIR          := $(SCRIPTS_DIR)/tcl
+DUMP_DIR         := $(TCL_DIR)/dump
 WAVES_DIR        := $(SCRIPTS_DIR)/waves
-SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR WAVES_DIR  
+SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR DUMP_DIR WAVES_DIR  
+
+# ---------------------------------- COVERAGE ----------------------------------
+COV_REPORT_DIR := $(COV_DIR)/report
+COV_MERGE_DIR  := $(COV_DIR)/merge
+COV_DIR_VARS   := COV_DIR COV_REPORT_DIR COV_MERGE_DIR 
 
 # ------------------------------------ UVCS ------------------------------------
 UVCS_DIR := $(TB_DIR)/uvcs
@@ -77,8 +83,8 @@ DPI_DIR := $(COMMON_DIR)/dpi
 
 # -------------------------------- REGRESSIONS ---------------------------------
 REGR_DIR       := $(ROOT_DIR)/regression
-MERGE_DIR      := $(ROOT_DIR)/merge_cov
-EXTRA_DIR_VARS := UVCS_DIR DPI_DIR REGR_DIR MERGE_DIR
+
+EXTRA_DIR_VARS := UVCS_DIR DPI_DIR REGR_DIR
 
 # =============================== CONFIGURATION ================================
 # User-editable knobs and defaults
@@ -94,6 +100,7 @@ SEED_MODE  ?= fixed
 SEED       ?= 5081996
 SEED_FLAGS ?=
 
+# Workspace
 SIMV_NAME ?= simv
 JOB_NAME  ?= debug
 SIMV_DIR  = $(BUILD_DIR)/$(SIMV_NAME)
@@ -102,10 +109,15 @@ JOB_DIR   = $(RUN_DIR)/$(JOB_NAME)
 WORKSPACE_DIR_VARS := SIMV_DIR JOB_DIR
 WORKSPACE_VARS := SIMV_NAME JOB_NAME $(WORKSPACE_DIR_VARS) 
 
-DUMP_MODE  ?= all
-UCLI_FLAGS ?= -ucli -do $(TCL_DIR)/$(DUMP_MODE).tcl
+# UCLI
+# Options: [default, all, none]
+DUMP_MODE    ?= default
+DUMP_LIB_TCL := $(DUMP_DIR)/dump_lib.tcl
+UCLI_FLAGS   ?= -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
 
-UCLI_VARS := DUMP_MODE UCLI_FLAGS
+export DUMP_LIB_TCL
+
+UCLI_VARS := DUMP_MODE DUMP_LIB_TCL UCLI_FLAGS
 
 SEED_VARS := SEED SEED_MODE SEED_FLAGS
 
@@ -127,7 +139,7 @@ USER_ARG_VARS := VCS_DEFINES RUN_ARGS
 ENABLE_GUI ?= false
 
 # Run Tcl by default
-GUI_FLAGS  ?= -ucli -do $(TCL_DIR)/dump.tcl
+GUI_FLAGS  ?= 
 
 GUI_VARS   := ENABLE_GUI GUI_FLAGS
 
@@ -196,7 +208,7 @@ UVCS_FILELIST = -F $(TB_DIR)/uvcs.f
 FILES         = $(UVCS_FILELIST) $(RTL_FILELIST) $(TB_FILELIST)
 
 # ------------------------------------ DPI -------------------------------------
-DPI_FILE =
+DPI_FILE ?=
 
 # ------------------------------------ VCS -------------------------------------
 VCS_FLAGS = -full64 -sverilog \
@@ -227,9 +239,9 @@ SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
 # -l $(JOB_DIR)/$(CUR_DATE)_run.log \
 # Add a new target and flags for the gui mode $(GUI_FLAGS)
 # ------------------------------------ URG -------------------------------------
-URG_FLAGS = -full64 -dir $(COV_NAME).vdb -format both \
+URG_FLAGS = -full64 -dir $(SIMV_DIR)/$(COV_NAME).vdb -format both \
 			-log $(LOGS_DIR)/$(CUR_DATE)_cov.log \
-			-report $(COV_DIR) -dbname $(RUN_DIR)/merged.vdb -show tests
+			-report $(COV_REPORT_DIR) -dbname $(COV_MERGE_DIR)/merged.vdb -show tests
 
 # ----------------------------------- VERDI ------------------------------------
 VERDI_FLAGS     = -nologo -q -ssf $(JOB_DIR)/novas.fsdb 
@@ -245,6 +257,7 @@ DIR_VARS := \
 	$(GENERAL_DIR_VARS) \
 	$(WORK_DIR_VARS) \
 	$(SCRIPTS_DIR_VARS) \
+	$(COV_DIR_VARS) \
 	$(EXTRA_DIR_VARS) \
 	$(WORKSPACE_DIR_VARS)
 
@@ -252,7 +265,9 @@ CONTROL_VARS := \
 	ENABLE_GUI \
 	SEED_MODE \
 	ENABLE_CODE_COV \
-	ENABLE_SVA
+	ENABLE_SVA \
+	SIMV_NAME \
+	JOB_NAME
 
 SYNOPSYS_TOOLS = vcs urg verdi wv
 
@@ -313,6 +328,7 @@ print-vars: ## UVM: Print Makefile variables
 	$(call print_vars,Control variables,$(CONTROL_VARS))
 	$(call print_var,VCS_FLAGS)
 	$(call print_var,SIMV_FLAGS)
+	$(call print_var,URG_FLAGS)
 	$(call print_var,VERDI_FLAGS)
 	$(call print_var,VERDI_COV_FLAGS)
 #______________________________________________________________________________
@@ -343,14 +359,16 @@ verdi-play: ## UVM: Opens Verdi GUI running verdi.tcl file
 
 .PHONY: cov
 cov: ## UVM: Create coverage report
-	@echo -e "$(C_ORA)Creating coverage report$(NC)"
-	@mkdir -p $(COV_DIR)
+	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
+		"Creating coverage report" "$(JOB_NAME)"
+	@mkdir -p $(COV_DIR)/report
 	cd $(RUN_DIR) && urg $(URG_FLAGS)
 #______________________________________________________________________________
 
 .PHONY: verdi-cov
 verdi-cov: ## UVM: Open coverage report in Verdi
-	@echo -e "$(C_ORA)Opening coverage report in Verdi$(NC)"
+	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
+		"Opening coverage report in Verdi" "$(JOB_NAME)"
 	cd $(RUN_DIR) && verdi $(VERDI_COV) &
 #______________________________________________________________________________
 
@@ -379,13 +397,13 @@ clean-logs: ## UVM: Remove compilation and simulation logs
 .PHONY: fsdb2vcd
 fsdb2vcd: ## TB: Convert FSDB to VCD
 	@echo -e "$(C_ORA)TB: Convert FSDB to VCD$(NC)"
-	cd $(RUN_DIR)/$(JOB_NAME) && fsdb2vcd novas.fsdb -o novas.vcd -sv
+	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
 #______________________________________________________________________________
 
 .PHONY: vcd2fsdb
 vcd2fsdb: ## TB: Convert VCD to FSDB
 	@echo -e "$(C_ORA)TB: Convert VCD to FSDB$(NC)"
-	cd $(RUN_DIR)/$(JOB_NAME) && vcd2fsdb novas.vcd -o novas.fsdb -sv
+	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
 #______________________________________________________________________________
 
 # ================================= INCLUDES ================================= #
