@@ -236,7 +236,6 @@ SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
 			$(UCLI_FLAGS) \
 			$(RUN_ARGS)
 
-# -l $(JOB_DIR)/$(CUR_DATE)_run.log \
 # Add a new target and flags for the gui mode $(GUI_FLAGS)
 # ------------------------------------ URG -------------------------------------
 URG_FLAGS = -full64 -dir $(SIMV_DIR)/$(COV_NAME).vdb -format both \
@@ -262,10 +261,15 @@ DIR_VARS := \
 	$(WORKSPACE_DIR_VARS)
 
 CONTROL_VARS := \
-	ENABLE_GUI \
-	SEED_MODE \
+	TEST \
+	TEST_VERBOSITY \
 	ENABLE_CODE_COV \
 	ENABLE_SVA \
+	SEED_MODE \
+	SEED \
+	VCS_DEFINES \
+	DUMP_MODE \
+	RUN_ARGS \
 	SIMV_NAME \
 	JOB_NAME
 
