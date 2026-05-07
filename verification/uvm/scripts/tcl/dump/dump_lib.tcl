@@ -57,6 +57,7 @@ proc dump_custom {} {
     quit
 }
 
+
 proc dump_none {} {
     # Run simulation without waveform dumping
     puts {[TCL-CUSTOM]: Running without waveform dumping}

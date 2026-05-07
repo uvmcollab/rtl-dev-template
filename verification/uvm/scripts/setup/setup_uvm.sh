@@ -1,4 +1,4 @@
-#!/usr/bin/env tcsh
+#!/usr/bin/env bash
 
 export GIT_ROOT="$(git rev-parse --show-toplevel)"
 export WORK="$GIT_ROOT/work/uvm"

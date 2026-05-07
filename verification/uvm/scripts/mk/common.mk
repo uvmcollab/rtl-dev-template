@@ -151,7 +151,7 @@ COV_NAME         ?= $(SIMV_NAME)_cov
 COV_FLAGS_COMMON ?= -cm $(CODE_COV_TYPES)
 
 # Compile always supports coverage
-COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(SIMV_DIR)/$(COV_NAME) 
+COV_FLAGS_VCS ?= $(COV_FLAGS_COMMON) -cm_dir $(SIMV_DIR)/$(COV_NAME)
 
 # Runtime collection is optional
 COV_FLAGS_SIMV   ?=
@@ -244,7 +244,7 @@ URG_FLAGS = -full64 -dir $(SIMV_DIR)/$(COV_NAME).vdb -format both \
 
 # ----------------------------------- VERDI ------------------------------------
 VERDI_FLAGS     = -nologo -q -ssf $(JOB_DIR)/novas.fsdb 
-VERDI_COV_FLAGS = -nologo -q -cov -covdir $(RUN_DIR)/merged.vdb
+VERDI_COV_FLAGS = -nologo -q -cov -covdir $(COV_MERGE_DIR)/merged.vdb
 VERDI_PLAY      = -play $(VERDI_FILE)
 # VERDI_FLAGS    = -ssf $(RUN_DIR)/$(JOB_NAME)/novas.fsdb -dbdir simv.daidir -nologo -q
 
@@ -262,7 +262,8 @@ DIR_VARS := \
 
 CONTROL_VARS := \
 	TEST \
-	TEST_VERBOSITY \
+	VERBOSITY \
+	CODE_COV_TYPES \
 	ENABLE_CODE_COV \
 	ENABLE_SVA \
 	SEED_MODE \
@@ -373,7 +374,8 @@ cov: ## UVM: Create coverage report
 verdi-cov: ## UVM: Open coverage report in Verdi
 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
 		"Opening coverage report in Verdi" "$(JOB_NAME)"
-	cd $(RUN_DIR) && verdi $(VERDI_COV) &
+	@mkdir -p $(VERDI_DIR)
+	cd $(VERDI_DIR) && verdi $(VERDI_COV_FLAGS) &
 #______________________________________________________________________________
 
 .PHONY: compile-dpi
