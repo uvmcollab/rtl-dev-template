@@ -100,6 +100,8 @@ SEED_MODE  ?= fixed
 SEED       ?= 5081996
 SEED_FLAGS ?=
 
+SEED_VARS  := SEED SEED_MODE SEED_FLAGS
+
 # Timescale
 TIMESCALE ?= 1ps/100fs
 
@@ -112,7 +114,7 @@ JOB_DIR   = $(RUN_DIR)/$(JOB_NAME)
 WORKSPACE_DIR_VARS := SIMV_DIR JOB_DIR
 WORKSPACE_VARS := SIMV_NAME JOB_NAME $(WORKSPACE_DIR_VARS) 
 
-# UCLI
+# ---------------------------- UCLI DUMP SELECTION -----------------------------
 # Options: [default, all, none]
 DUMP_MODE    ?= default
 DUMP_LIB_TCL := $(DUMP_DIR)/dump_lib.tcl
@@ -121,12 +123,13 @@ UCLI_FLAGS   ?= -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
 export DUMP_LIB_TCL
 
 UCLI_VARS := DUMP_MODE DUMP_LIB_TCL UCLI_FLAGS
-SEED_VARS := SEED SEED_MODE SEED_FLAGS
 
 TEST_RUN_VARS := TEST VERBOSITY TIMESCALE \
 				$(SEED_VARS) \
 				$(WORKSPACE_VARS) \
 				$(UCLI_VARS)
+
+# --------------------- DEFINES / COMPILE ARGS / RUN ARGS ----------------------
 
 # Defines and extra compile arguments
 DEFINES      ?= +define+GIT_DIR=\"$(GIT_DIR)\"
@@ -146,10 +149,18 @@ GUI_FLAGS  ?=
 
 GUI_VARS   := ENABLE_GUI GUI_FLAGS
 
+# --------------------------------- DEBUG MODE ---------------------------------
+# Options: [true, false]
+ENABLE_DEBUG_DB ?= false
+DEBUG_FLAGS_VCS ?=
+
+DEBUG_VARS = ENABLE_DEBUG_DB DEBUG_FLAGS_VCS
+
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
-ENABLE_UVM  ?= true
-UVM_VERSION ?= 1.2
+ENABLE_UVM           ?= true
+ENABLE_UVM_RECORDING ?= true
+UVM_VERSION          ?= 1.2
 
 UVM_FLAGS_VCS  ?= 
 UVM_FLAGS_SIMV ?= 
@@ -190,13 +201,23 @@ ifeq ($(ENABLE_GUI),true)
 	GUI_FLAGS = -gui=verdi
 endif
 
+# --------------------------------- DEBUG MODE ---------------------------------
+# Options: [true, false]
+ifeq ($(ENABLE_DEBUG_DB),true)
+	DEBUG_FLAGS_VCS = -lca -debug_access+all -kdb
+endif
+
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
 ifeq ($(ENABLE_UVM),true)
-	UVM_FLAGS_VCS  = -ntb_opts uvm-$(UVM_VERSION)
+	UVM_FLAGS_VCS   = -ntb_opts uvm-$(UVM_VERSION)
+	UVM_FLAGS_SIMV += +UVM_NO_RELNOTES
+endif
+
+# Options: [true, false]
+ifeq ($(ENABLE_DEBUG_DB),true)
 	UVM_FLAGS_SIMV = +UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
-					+UVM_TR_RECORD +UVM_LOG_RECORD \
-					+UVM_NO_RELNOTES
+					+UVM_TR_RECORD +UVM_LOG_RECORD
 endif
 
 # --------------------------------- SEED MODE ----------------------------------
@@ -235,7 +256,7 @@ DPI_FILE ?=
 # ------------------------------------ VCS -------------------------------------
 VCS_FLAGS = -full64 -sverilog \
 			$(UVM_FLAGS_VCS) \
-			-lca -debug_access+all -kdb \
+			$(DEBUG_FLAGS_VCS) \
 			-timescale=$(TIMESCALE) \
 			$(FILES) \
 			-l $(SIMV_DIR)/$(CUR_DATE)_compile.log \
@@ -286,6 +307,7 @@ CONTROL_VARS := \
 	TEST \
 	VERBOSITY \
 	TIMESCALE \
+	ENABLE_DEBUG_DB \
 	ENABLE_UVM \
 	CODE_COV_TYPES \
 	ENABLE_CODE_COV \
@@ -332,7 +354,7 @@ all: help
 #_______________________________________________________________________________
 
 .PHONY: check-tools
-check-tools: ## UVM: Check required Synopsys tools
+check-tools: ## COMMON: Check required Synopsys tools
 	@printf "$(C_CYN)%s$(C_RST)\n" "Checking Synopsys tools..."
 	@for tool in $(SYNOPSYS_TOOLS); do \
 		if ! command -v $$tool >/dev/null 2>&1; then \
@@ -347,7 +369,7 @@ check-tools: ## UVM: Check required Synopsys tools
 #_______________________________________________________________________________
 
 .PHONY: print-vars
-print-vars: ## UVM: Print Makefile variables
+print-vars: ## COMMON: Print Makefile variables
 	$(call print_vars,Directory variables,$(DIR_VARS))
 	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
 	$(call print_vars,Test variables,$(TEST_RUN_VARS))
@@ -356,6 +378,7 @@ print-vars: ## UVM: Print Makefile variables
 	$(call print_vars,UCLI variables,$(UCLI_VARS))
 	$(call print_vars,Coverage variables,$(CODE_COV_VARS))
 	$(call print_vars,SVA variables,$(SVA_VARS))
+	$(call print_vars,Debug variables,$(DEBUG_VARS))
 	$(call print_vars,Control variables,$(CONTROL_VARS))
 	$(call print_var,VCS_FLAGS)
 	$(call print_var,SIMV_FLAGS)
@@ -365,31 +388,25 @@ print-vars: ## UVM: Print Makefile variables
 #_______________________________________________________________________________
 
 .PHONY: compile
-compile: ## UVM: Runs VCS compilation
+compile: ## COMMON: Runs VCS compilation
 	$(RUN_COMPILE)
 #_______________________________________________________________________________
 
 .PHONY: sim
-sim: ## UVM: Runs simv simulation
+sim: ## COMMON: Runs simv simulation
 	$(RUN_SIM)
 #_______________________________________________________________________________
 
 .PHONY: verdi
-verdi: ## UVM: Opens Verdi GUI
+verdi: ## COMMON: Opens Verdi GUI
 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
 		"Openning Verdi GUI" "$(JOB_NAME)"
 	@mkdir -p $(VERDI_DIR)
 	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
 #_______________________________________________________________________________
 
-.PHONY: verdi-play
-verdi-play: ## UVM: Opens Verdi GUI running verdi.tcl file
-	@echo -e "$(C_ORA)Opening Verdi running verdi.cmd$(NC)"
-	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) $(VERDI_PLAY) &
-#_______________________________________________________________________________
-
 .PHONY: cov
-cov: ## UVM: Create coverage report
+cov: ## COMMON: Create coverage report
 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
 		"Creating coverage report" "$(JOB_NAME)"
 	@mkdir -p $(COV_DIR)/report
@@ -397,15 +414,40 @@ cov: ## UVM: Create coverage report
 #_______________________________________________________________________________
 
 .PHONY: verdi-cov
-verdi-cov: ## UVM: Open coverage report in Verdi
+verdi-cov: ## COMMON: Open coverage report in Verdi
 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
 		"Opening coverage report in Verdi" "$(JOB_NAME)"
 	@mkdir -p $(VERDI_DIR)
 	cd $(VERDI_DIR) && verdi $(VERDI_COV_FLAGS) &
 #_______________________________________________________________________________
 
+.PHONY: clean
+clean: ## COMMON: Remove all simulation files
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
+	@rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR) $(VERDI_DIR)
+#_______________________________________________________________________________
+
+.PHONY: clean-logs
+clean-logs: ## COMMON: Remove compilation and simulation logs
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing log files"
+	@find $(BUILD_DIR) -name "*_compile.log" -delete
+	@find $(RUN_DIR)   -name "*_run.log"     -delete
+#_______________________________________________________________________________
+
+.PHONY: fsdb2vcd
+fsdb2vcd: ## COMMON: Convert FSDB to VCD
+	@printf "$(C_CYN)%s$(C_RST)\n" "Convert FSDB to VCD"
+	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
+#_______________________________________________________________________________
+
+.PHONY: vcd2fsdb
+vcd2fsdb: ## COMMON: Convert VCD to FSDB
+	@printf "$(C_CYN)%s$(C_RST)\n" "Convert VCD to FSDB"
+	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
+#_______________________________________________________________________________
+
 .PHONY: compile-dpi
-compile-dpi: ## TB: Run dpi (C/C++) compilation
+compile-dpi: ## COMMON: Run dpi (C/C++) compilation
 	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
 	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
 # -fPIC Flag to generate position-independent code (shared library)
@@ -413,35 +455,8 @@ compile-dpi: ## TB: Run dpi (C/C++) compilation
 # but it's better to compile from vcs command
 #_______________________________________________________________________________
 
-.PHONY: clean
-clean: ## UVM: Remove all simulation files
-	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
-	@rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
-#_______________________________________________________________________________
-
-.PHONY: clean-logs
-clean-logs: ## UVM: Remove compilation and simulation logs
-	@printf "$(C_CYN)%s$(C_RST)\n" "Removing log files"
-	@find $(BUILD_DIR) -name "*_compile.log" -delete
-	@find $(RUN_DIR)   -name "*_run.log"     -delete
-#_______________________________________________________________________________
-
-.PHONY: fsdb2vcd
-fsdb2vcd: ## TB: Convert FSDB to VCD
-	@echo -e "$(C_ORA)TB: Convert FSDB to VCD$(NC)"
-	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
-#_______________________________________________________________________________
-
-.PHONY: vcd2fsdb
-vcd2fsdb: ## TB: Convert VCD to FSDB
-	@echo -e "$(C_ORA)TB: Convert VCD to FSDB$(NC)"
-	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
-#_______________________________________________________________________________
-
-# ================================= INCLUDES ================================= #
-
 .PHONY: help
-help: ## UVM: Displays help message
+help: ## COMMON: Displays help message
 	@echo -e "======================================================================"
 	@echo -e "                               MAKEFILE.UVC                           "
 	@echo -e "======================================================================"
@@ -455,7 +470,7 @@ help: ## UVM: Displays help message
 	@echo "  SEED              : Random seed used, must be an integer > 0"
 	@echo "  ENABLE_GUI        : Enables to run the sim in gui mode [true|false]"
 	@echo "  ENABLE_CODE_COV   : Enables code coverage [true|false]"
-	@echo "  DEFINES       : Add defines to vcs command"
+	@echo "  DEFINES           : Add defines to vcs command"
 	@echo "  RUN_ARGS          : Add plusargs to simv command"
 	@echo "  JOB_NAME          : Name of the job (simulation folder)"
 	@echo "-------------------------- Variable Values --------------------------"
