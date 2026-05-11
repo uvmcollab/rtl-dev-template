@@ -100,6 +100,9 @@ SEED_MODE  ?= fixed
 SEED       ?= 5081996
 SEED_FLAGS ?=
 
+# Timescale
+TIMESCALE ?= 1ps/100fs
+
 # Workspace
 SIMV_NAME ?= simv
 JOB_NAME  ?= debug
@@ -118,10 +121,9 @@ UCLI_FLAGS   ?= -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
 export DUMP_LIB_TCL
 
 UCLI_VARS := DUMP_MODE DUMP_LIB_TCL UCLI_FLAGS
-
 SEED_VARS := SEED SEED_MODE SEED_FLAGS
 
-TEST_RUN_VARS := TEST VERBOSITY \
+TEST_RUN_VARS := TEST VERBOSITY TIMESCALE \
 				$(SEED_VARS) \
 				$(WORKSPACE_VARS) \
 				$(UCLI_VARS)
@@ -145,7 +147,7 @@ GUI_VARS   := ENABLE_GUI GUI_FLAGS
 
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
-ENABLE_UVM ?= true
+ENABLE_UVM  ?= true
 UVM_VERSION ?= 1.2
 
 UVM_FLAGS_VCS  ?= 
@@ -233,7 +235,8 @@ DPI_FILE ?=
 VCS_FLAGS = -full64 -sverilog \
 			$(UVM_FLAGS_VCS) \
 			-lca -debug_access+all -kdb \
-			-timescale=1ps/100fs $(FILES) \
+			-timescale=$(TIMESCALE) \
+			$(FILES) \
 			-l $(SIMV_DIR)/$(CUR_DATE)_compile.log \
 			-top tb \
 			-j8 \
@@ -280,14 +283,15 @@ DIR_VARS := \
 CONTROL_VARS := \
 	TEST \
 	VERBOSITY \
+	TIMESCALE \
 	ENABLE_UVM \
 	CODE_COV_TYPES \
 	ENABLE_CODE_COV \
 	ENABLE_SVA \
 	SEED_MODE \
 	SEED \
-	VCS_DEFINES \
 	DUMP_MODE \
+	VCS_DEFINES \
 	RUN_ARGS \
 	SIMV_NAME \
 	JOB_NAME
@@ -322,7 +326,7 @@ SHELL         := bash
 
 .PHONY: all
 all: help
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: check-tools
 check-tools: ## UVM: Check required Synopsys tools
@@ -337,7 +341,7 @@ check-tools: ## UVM: Check required Synopsys tools
 		fi; \
 	done
 	@printf "$(C_GRN)%s$(C_RST)\n" "All Synopsys tools are available"
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: print-vars
 print-vars: ## UVM: Print Makefile variables
@@ -355,17 +359,17 @@ print-vars: ## UVM: Print Makefile variables
 	$(call print_var,URG_FLAGS)
 	$(call print_var,VERDI_FLAGS)
 	$(call print_var,VERDI_COV_FLAGS)
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: compile
 compile: ## UVM: Runs VCS compilation
 	$(run_compile)
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: sim
 sim: ## UVM: Runs simv simulation
 	$(run_sim)
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: verdi
 verdi: ## UVM: Opens Verdi GUI
@@ -373,13 +377,13 @@ verdi: ## UVM: Opens Verdi GUI
 		"Openning Verdi GUI" "$(JOB_NAME)"
 	@mkdir -p $(VERDI_DIR)
 	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: verdi-play
 verdi-play: ## UVM: Opens Verdi GUI running verdi.tcl file
 	@echo -e "$(C_ORA)Opening Verdi running verdi.cmd$(NC)"
 	cd $(RUN_DIR) && verdi $(VERDI_FLAGS) $(VERDI_PLAY) &
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: cov
 cov: ## UVM: Create coverage report
@@ -387,7 +391,7 @@ cov: ## UVM: Create coverage report
 		"Creating coverage report" "$(JOB_NAME)"
 	@mkdir -p $(COV_DIR)/report
 	cd $(RUN_DIR) && urg $(URG_FLAGS)
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: verdi-cov
 verdi-cov: ## UVM: Open coverage report in Verdi
@@ -395,7 +399,7 @@ verdi-cov: ## UVM: Open coverage report in Verdi
 		"Opening coverage report in Verdi" "$(JOB_NAME)"
 	@mkdir -p $(VERDI_DIR)
 	cd $(VERDI_DIR) && verdi $(VERDI_COV_FLAGS) &
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: compile-dpi
 compile-dpi: ## TB: Run dpi (C/C++) compilation
@@ -404,32 +408,32 @@ compile-dpi: ## TB: Run dpi (C/C++) compilation
 # -fPIC Flag to generate position-independent code (shared library)
 # If you want to compile dpi repeatedly and include the .o to simv
 # but it's better to compile from vcs command
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: clean
 clean: ## UVM: Remove all simulation files
 	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
 	@rm -rf $(BUILD_DIR) $(RUN_DIR) $(LOGS_DIR) $(COV_DIR)
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: clean-logs
 clean-logs: ## UVM: Remove compilation and simulation logs
 	@printf "$(C_CYN)%s$(C_RST)\n" "Removing log files"
 	@find $(BUILD_DIR) -name "*_compile.log" -delete
 	@find $(RUN_DIR)   -name "*_run.log"     -delete
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: fsdb2vcd
 fsdb2vcd: ## TB: Convert FSDB to VCD
 	@echo -e "$(C_ORA)TB: Convert FSDB to VCD$(NC)"
 	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 .PHONY: vcd2fsdb
 vcd2fsdb: ## TB: Convert VCD to FSDB
 	@echo -e "$(C_ORA)TB: Convert VCD to FSDB$(NC)"
 	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
-#______________________________________________________________________________
+#_______________________________________________________________________________
 
 # ================================= INCLUDES ================================= #
 
@@ -462,4 +466,4 @@ help: ## UVM: Displays help message
 	@echo "  RUN_ARGS          : $(RUN_ARGS)"
 	@echo "  JOB_NAME          : $(JOB_NAME)"
 	@echo "======================================================================"
-#______________________________________________________________________________
+#_______________________________________________________________________________
