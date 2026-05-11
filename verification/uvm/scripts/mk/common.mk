@@ -32,7 +32,7 @@ MSG_ERROR = @printf "$(C_RED)[FAIL]$(C_RST) %s\n"
 
 define print_vars
 	@printf "$(C_CYN)%s$(C_RST)\n" "$(1)"
-	@$(foreach var,$(2),printf "%-17s = %s\n" "$(var)" "$($(var))";)
+	@$(foreach var,$(2),printf "%-20s = %s\n" "$(var)" "$($(var))";)
 	@printf "\n"
 endef
 
@@ -159,13 +159,13 @@ DEBUG_VARS = ENABLE_DEBUG_DB DEBUG_FLAGS_VCS
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
 ENABLE_UVM           ?= true
-ENABLE_UVM_RECORDING ?= true
+ENABLE_UVM_RECORDING ?= false
 UVM_VERSION          ?= 1.2
 
 UVM_FLAGS_VCS  ?= 
 UVM_FLAGS_SIMV ?= 
 
-UVM_VARS = ENABLE_UVM UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
+UVM_VARS = ENABLE_UVM ENABLE_UVM_RECORDING UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
 
 # ------------------------------- CODE COVERAGE --------------------------------
 # Options: [true, false]
@@ -215,7 +215,7 @@ ifeq ($(ENABLE_UVM),true)
 endif
 
 # Options: [true, false]
-ifeq ($(ENABLE_DEBUG_DB),true)
+ifeq ($(ENABLE_UVM_RECORDING),true)
 	UVM_FLAGS_SIMV = +UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
 					+UVM_TR_RECORD +UVM_LOG_RECORD
 endif
@@ -309,6 +309,7 @@ CONTROL_VARS := \
 	TIMESCALE \
 	ENABLE_DEBUG_DB \
 	ENABLE_UVM \
+	ENABLE_UVM_RECORDING \
 	CODE_COV_TYPES \
 	ENABLE_CODE_COV \
 	ENABLE_SVA \
