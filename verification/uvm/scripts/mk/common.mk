@@ -128,13 +128,14 @@ TEST_RUN_VARS := TEST VERBOSITY TIMESCALE \
 				$(WORKSPACE_VARS) \
 				$(UCLI_VARS)
 
-# Compile extra arguments
-VCS_DEFINES ?= +define+GIT_DIR=\"$(GIT_DIR)\"
+# Defines and extra compile arguments
+DEFINES      ?= +define+GIT_DIR=\"$(GIT_DIR)\"
+COMPILE_ARGS ?=
 
 # Runtime extra arguments
 RUN_ARGS ?=
 
-USER_ARG_VARS := VCS_DEFINES RUN_ARGS
+USER_ARG_VARS := DEFINES COMPILE_ARGS RUN_ARGS
 
 # ---------------------------------- GUI MODE ----------------------------------
 # Options: [true, false]
@@ -241,9 +242,10 @@ VCS_FLAGS = -full64 -sverilog \
 			-top tb \
 			-j8 \
 			-o $(SIMV_NAME) \
-			$(VCS_DEFINES) \
+			$(DEFINES) \
 			$(COV_FLAGS_VCS) \
 			$(SVA_FLAGS_VCS) \
+			$(COMPILE_ARGS) \
 			$(DPI_FILE)
 
 # ------------------------------------ SIMV ------------------------------------
@@ -291,7 +293,8 @@ CONTROL_VARS := \
 	SEED_MODE \
 	SEED \
 	DUMP_MODE \
-	VCS_DEFINES \
+	DEFINES \
+	COMPILE_ARGS \
 	RUN_ARGS \
 	SIMV_NAME \
 	JOB_NAME
@@ -301,14 +304,14 @@ SYNOPSYS_TOOLS = vcs urg verdi wv
 # =================================== MACROS ===================================
 
 # -------------------------------- COMPILATION ---------------------------------
-define run_compile
+define RUN_COMPILE
 	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling project"
 	@mkdir -p $(SIMV_DIR) $(LOGS_DIR)
 	cd $(SIMV_DIR) && vcs $(VCS_FLAGS)
 endef
 
 # --------------------------------- SIMULATION ---------------------------------
-define run_sim
+define RUN_SIM
 	@printf "$(C_CYN)%s$(C_RST)\n" \
 		"Running simulation SEED=$(SEED_MODE) SEED=$(SEED)"
 	@mkdir -p $(JOB_DIR) $(LOGS_DIR)
@@ -363,12 +366,12 @@ print-vars: ## UVM: Print Makefile variables
 
 .PHONY: compile
 compile: ## UVM: Runs VCS compilation
-	$(run_compile)
+	$(RUN_COMPILE)
 #_______________________________________________________________________________
 
 .PHONY: sim
 sim: ## UVM: Runs simv simulation
-	$(run_sim)
+	$(RUN_SIM)
 #_______________________________________________________________________________
 
 .PHONY: verdi
@@ -452,7 +455,7 @@ help: ## UVM: Displays help message
 	@echo "  SEED              : Random seed used, must be an integer > 0"
 	@echo "  ENABLE_GUI        : Enables to run the sim in gui mode [true|false]"
 	@echo "  ENABLE_CODE_COV   : Enables code coverage [true|false]"
-	@echo "  VCS_DEFINES       : Add defines to vcs command"
+	@echo "  DEFINES       : Add defines to vcs command"
 	@echo "  RUN_ARGS          : Add plusargs to simv command"
 	@echo "  JOB_NAME          : Name of the job (simulation folder)"
 	@echo "-------------------------- Variable Values --------------------------"
@@ -462,7 +465,7 @@ help: ## UVM: Displays help message
 	@echo "  SEED              : $(SEED)"
 	@echo "  ENABLE_GUI        : $(ENABLE_GUI)"
 	@echo "  ENABLE_CODE_COV   : $(ENABLE_CODE_COV)"
-	@echo "  VCS_DEFINES       : $(VCS_DEFINES)"
+	@echo "  DEFINES           : $(DEFINES)"
 	@echo "  RUN_ARGS          : $(RUN_ARGS)"
 	@echo "  JOB_NAME          : $(JOB_NAME)"
 	@echo "======================================================================"
