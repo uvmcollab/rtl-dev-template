@@ -143,6 +143,16 @@ GUI_FLAGS  ?=
 
 GUI_VARS   := ENABLE_GUI GUI_FLAGS
 
+# ------------------------------------ UVM -------------------------------------
+# Options: [true, false]
+ENABLE_UVM ?= true
+UVM_VERSION ?= 1.2
+
+UVM_FLAGS_VCS  ?= 
+UVM_FLAGS_SIMV ?= 
+
+UVM_VARS = ENABLE_UVM UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
+
 # ------------------------------- CODE COVERAGE --------------------------------
 # Options: [true, false]
 ENABLE_CODE_COV  ?= true
@@ -175,6 +185,15 @@ SVA_VARS := ENABLE_SVA SVA_FLAGS_VCS SVA_FLAGS_SIMV
 # Options: [true, false]
 ifeq ($(ENABLE_GUI),true)
 	GUI_FLAGS = -gui=verdi
+endif
+
+# ------------------------------------ UVM -------------------------------------
+# Options: [true, false]
+ifeq ($(ENABLE_UVM),true)
+	UVM_FLAGS_VCS  = -ntb_opts uvm-$(UVM_VERSION)
+	UVM_FLAGS_SIMV = +UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
+					+UVM_TR_RECORD +UVM_LOG_RECORD \
+					+UVM_NO_RELNOTES
 endif
 
 # --------------------------------- SEED MODE ----------------------------------
@@ -212,7 +231,7 @@ DPI_FILE ?=
 
 # ------------------------------------ VCS -------------------------------------
 VCS_FLAGS = -full64 -sverilog \
-			-ntb_opts uvm-1.2 \
+			$(UVM_FLAGS_VCS) \
 			-lca -debug_access+all -kdb \
 			-timescale=1ps/100fs $(FILES) \
 			-l $(SIMV_DIR)/$(CUR_DATE)_compile.log \
@@ -226,9 +245,7 @@ VCS_FLAGS = -full64 -sverilog \
 
 # ------------------------------------ SIMV ------------------------------------
 SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
-			+UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
-			+UVM_TR_RECORD +UVM_LOG_RECORD \
-			+UVM_NO_RELNOTES \
+			$(UVM_FLAGS_SIMV) \
 			-no_save \
 			$(SEED_FLAGS) \
 			$(COV_FLAGS_SIMV) \
@@ -263,6 +280,7 @@ DIR_VARS := \
 CONTROL_VARS := \
 	TEST \
 	VERBOSITY \
+	ENABLE_UVM \
 	CODE_COV_TYPES \
 	ENABLE_CODE_COV \
 	ENABLE_SVA \
@@ -326,6 +344,7 @@ print-vars: ## UVM: Print Makefile variables
 	$(call print_vars,Directory variables,$(DIR_VARS))
 	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
 	$(call print_vars,Test variables,$(TEST_RUN_VARS))
+	$(call print_vars,UVM variables,$(UVM_VARS))
 	$(call print_vars,Seed variables,$(SEED_VARS))
 	$(call print_vars,UCLI variables,$(UCLI_VARS))
 	$(call print_vars,Coverage variables,$(CODE_COV_VARS))
