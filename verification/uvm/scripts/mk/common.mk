@@ -1,5 +1,5 @@
 ##==============================================================================
-## [Filename]       common.vcs
+## [Filename]       common.mk
 ## [Project]        -
 ## [Author]         Ciro Bermudez - cirofabian.bermudez@gmail.com
 ## [Language]       GNU Makefile
@@ -32,7 +32,10 @@ MSG_ERROR = @printf "$(C_RED)[FAIL]$(C_RST) %s\n"
 
 define print_vars
 	@printf "$(C_CYN)%s$(C_RST)\n" "$(1)"
-	@$(foreach var,$(2),printf "%-20s = %s\n" "$(var)" "$($(var))";)
+	@$(foreach var,$(2), \
+		printf "%-20s = %s\n" \
+		"$(var)" \
+		"$($(var))";)
 	@printf "\n"
 endef
 
@@ -74,7 +77,7 @@ RUN_DIR        = $(ROOT_DIR)/sim
 LOGS_DIR       = $(ROOT_DIR)/logs
 VERDI_DIR      = $(ROOT_DIR)/verdi
 COV_DIR        = $(ROOT_DIR)/cov
-WORK_DIR_VARS  = ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
+WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
 
 # ---------------------------------- SCRIPTS -----------------------------------
 SCRIPTS_DIR      := $(TB_DIR)/scripts
@@ -85,17 +88,17 @@ WAVES_DIR        := $(SCRIPTS_DIR)/waves
 SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR DUMP_DIR WAVES_DIR  
 
 # ---------------------------------- COVERAGE ----------------------------------
-COV_REPORT_DIR = $(COV_DIR)/report
-COV_MERGE_DIR  = $(COV_DIR)/merge
-COV_DIR_VARS   = COV_DIR COV_REPORT_DIR COV_MERGE_DIR 
+COV_REPORT_DIR  = $(COV_DIR)/report
+COV_MERGE_DIR   = $(COV_DIR)/merge
+COV_DIR_VARS   := COV_DIR COV_REPORT_DIR COV_MERGE_DIR 
 
 # ------------------------------------ UVCS ------------------------------------
-UVCS_DIR := $(TB_DIR)/uvcs
+UVCS_DIR = $(TB_DIR)/uvcs
 
 # ------------------------------------ DPI -------------------------------------
-DPI_DIR := $(COMMON_DIR)/dpi
+DPI_DIR = $(COMMON_DIR)/dpi
 
-EXTRA_DIR_VARS = UVCS_DIR DPI_DIR
+EXTRA_DIR_VARS := UVCS_DIR DPI_DIR
 
 # =============================== CONFIGURATION ================================
 # User-editable knobs and defaults
@@ -110,7 +113,7 @@ TEST      ?= top_test
 # Options: [auto, fixed]
 SEED_MODE  ?= fixed
 SEED       ?= 5081996
-SEED_FLAGS ?=
+SEED_FLAGS  =
 
 SEED_VARS  := SEED SEED_MODE SEED_FLAGS
 
@@ -130,7 +133,7 @@ WORKSPACE_VARS := SIMV_NAME JOB_NAME $(WORKSPACE_DIR_VARS)
 # Options: [default, all, none]
 DUMP_MODE    ?= default
 DUMP_LIB_TCL := $(DUMP_DIR)/dump_lib.tcl
-UCLI_FLAGS   ?= -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
+UCLI_FLAGS    = -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
 
 export DUMP_LIB_TCL
 
@@ -167,7 +170,7 @@ GUI_VARS   := ENABLE_GUI GUI_FLAGS
 ENABLE_DEBUG_DB ?= false
 DEBUG_FLAGS_VCS ?=
 
-DEBUG_VARS = ENABLE_DEBUG_DB DEBUG_FLAGS_VCS
+DEBUG_VARS := ENABLE_DEBUG_DB DEBUG_FLAGS_VCS
 
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
@@ -178,7 +181,7 @@ UVM_VERSION          ?= 1.2
 UVM_FLAGS_VCS  ?= 
 UVM_FLAGS_SIMV ?= 
 
-UVM_VARS = ENABLE_UVM ENABLE_UVM_RECORDING UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
+UVM_VARS := ENABLE_UVM ENABLE_UVM_RECORDING UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
 
 # ------------------------------- CODE COVERAGE --------------------------------
 # Options: [true, false]
@@ -212,19 +215,19 @@ SVA_VARS := ENABLE_SVA SVA_FLAGS_VCS SVA_FLAGS_SIMV
 # --------------------------------- DEBUG MODE ---------------------------------
 # Options: [true, false]
 ifeq ($(ENABLE_DEBUG_DB),true)
-	DEBUG_FLAGS_VCS = -lca -debug_access+all -kdb
+	DEBUG_FLAGS_VCS += -lca -debug_access+all -kdb
 endif
 
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
 ifeq ($(ENABLE_UVM),true)
-	UVM_FLAGS_VCS   = -ntb_opts uvm-$(UVM_VERSION)
+	UVM_FLAGS_VCS  += -ntb_opts uvm-$(UVM_VERSION)
 	UVM_FLAGS_SIMV += +UVM_NO_RELNOTES
 endif
 
 # Options: [true, false]
 ifeq ($(ENABLE_UVM_RECORDING),true)
-	UVM_FLAGS_SIMV = +UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
+	UVM_FLAGS_SIMV += +UVM_VERDI_TRACE=UVM_AWARE+RAL+HIER+TLM \
 					+UVM_TR_RECORD +UVM_LOG_RECORD
 endif
 
@@ -299,7 +302,7 @@ VERDI_COV_FLAGS = -nologo -q -cov -covdir $(COV_MERGE_DIR)/merged.vdb
 VERDI_PLAY      = -play $(VERDI_FILE)
 # VERDI_FLAGS    = -ssf $(RUN_DIR)/$(JOB_NAME)/novas.fsdb -dbdir simv.daidir -nologo -q
 
-TOOLS_FLAGS_VARS = VCS_FLAGS SIMV_FLAGS URG_FLAGS VERDI_FLAGS VERDI_COV_FLAGS
+TOOLS_FLAGS_VARS := VCS_FLAGS SIMV_FLAGS URG_FLAGS VERDI_FLAGS VERDI_COV_FLAGS
 
 # ============================== VARIABLE GROUPS ===============================
 
@@ -350,7 +353,7 @@ HELP_RUN_ARGS             := Additional runtime arguments passed to simv
 HELP_SIMV_NAME            := Name of the generated simulation executable
 HELP_JOB_NAME             := Name of the simulation job/output directory
 
-SYNOPSYS_TOOLS = vcs urg verdi wv
+SYNOPSYS_TOOLS := vcs urg verdi wv
 
 # =================================== MACROS ===================================
 
@@ -429,7 +432,7 @@ sim: ## COMMON: Runs simv simulation
 .PHONY: verdi
 verdi: ## COMMON: Opens Verdi GUI
 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
-		"Openning Verdi GUI" "$(JOB_NAME)"
+		"Opening Verdi GUI" "$(JOB_NAME)"
 	@mkdir -p $(VERDI_DIR)
 	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
 #_______________________________________________________________________________
