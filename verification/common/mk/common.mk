@@ -72,7 +72,7 @@ GENERAL_DIR_VARS := GIT_DIR RTL_DIR VRF_DIR COMMON_DIR TB_DIR
 
 # ----------------------------------- COMMON -----------------------------------
 COMMON_TCL_DIR   = $(COMMON_DIR)/tcl
-COMMON_MK_DIR    = $(COMMON_DIR)/mk
+COMMON_MK_DIR   ?= $(COMMON_DIR)/mk
 DUMP_DIR         = $(COMMON_TCL_DIR)/dump
 DPI_DIR          = $(COMMON_DIR)/dpi
 COMMON_DIR_VARS := COMMON_TCL_DIR COMMON_MK_DIR DUMP_DIR DPI_DIR
@@ -263,6 +263,7 @@ RTL_FILELIST   = -F $(RTL_DIR)/rtl.f
 TB_FILELIST    = -F $(TB_DIR)/tb.f
 UVCS_FILELIST ?=
 FILES          = $(UVCS_FILELIST) $(RTL_FILELIST) $(TB_FILELIST)
+FILELIST_VARS := RTL_FILELIST TB_FILELIST UVCS_FILELIST
 
 # ------------------------------------ DPI -------------------------------------
 DPI_FILE ?=
@@ -358,6 +359,8 @@ HELP_COMPILE_ARGS         := Additional arguments passed to the vcs compile comm
 HELP_RUN_ARGS             := Additional runtime arguments passed to simv
 HELP_SIMV_NAME            := Name of the generated simulation executable
 HELP_JOB_NAME             := Name of the simulation job/output directory
+HELP_UVCS_FILELIST        := Optional UVC filelist passed to VCS. Empty by default
+HELP_DPI_FILE             := Optional DPI shared library passed to VCS. Empty by default
 
 SYNOPSYS_TOOLS := vcs urg verdi wv
 
@@ -411,6 +414,7 @@ print-vars: ## COMMON: Print Makefile variables
 	$(call print_vars,Directory variables,$(DIR_VARS))
 	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
 	$(call print_vars,Test variables,$(TEST_RUN_VARS))
+	$(call print_vars,Filelist variables,$(FILELIST_VARS))
 	$(call print_vars,UVM variables,$(UVM_VARS))
 	$(call print_vars,Seed variables,$(SEED_VARS))
 	$(call print_vars,UCLI variables,$(UCLI_VARS))
@@ -485,7 +489,6 @@ vcd2fsdb: ## COMMON: Convert VCD to FSDB
 #_______________________________________________________________________________
 
 #@printf "%s\n" "$(MAKEFILE_LIST)"
-#@printf "%s\n" "                                    PROJECT.MK                                  "
 .PHONY: help-common
 help-common: ## COMMON: Displays help message
 	@printf "%s\n" "================================================================================"
