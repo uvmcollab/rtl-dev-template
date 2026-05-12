@@ -7,13 +7,16 @@ cp $HOME/snps_scripts/setup_synopsys_eda.sh verification/common/setup
 ```
 
 2. The first time from the root directory run:
+
 ```bash
-source verification/uvm/scripts/setup/setup_uvc.sh
+source verification/uvm/scripts/setup/setup_uvm.sh
+source verification/directed/scripts/setup/setup_uvc.sh
 ```
 
 > Remember: this should be run JUST ONCE
 
 The user needs to modify just:
+- `project.mk`
 - `tb.f`
 - `uvc.f`
 - `verification/uvm/`

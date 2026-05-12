@@ -5,7 +5,7 @@
 ## [Language]       GNU Makefile
 ## [Created]        -
 ## [Modified]       -
-## [Description]    -
+## [Description]    UVM project
 ## [Notes]          -
 ## [Status]         stable
 ## [Revisions]      -
@@ -17,7 +17,6 @@
 GIT_DIR       := $(shell git rev-parse --show-toplevel)
 TB_DIR        ?= $(GIT_DIR)/verification/uvm
 COMMON_MK_DIR := $(GIT_DIR)/verification/common/mk
-DPI_DIR       := $(GIT_DIR)/verification/common/dpi
 
 # =============================== CONFIGURATION ================================
 # Project-specific defaults
@@ -35,3 +34,16 @@ include $(COMMON_MK_DIR)/common.mk
 
 # Regression Manager
 -include $(MK_DIR)/regression.mk
+
+# ================================= HELP MENU ==================================
+
+.PHONY: help
+help: ## COMMON: Displays help message
+	@printf "%s\n" "================================================================================"
+	@printf "%s\n" "                                    PROJECT.MK                                  "
+	@printf "%s\n" "================================================================================"
+	@printf "%s\n" "Usage: make <target> [variables]"
+	@printf "%s\n" "------------------------------------ TARGETS -----------------------------------"
+	@grep -h -E '^help-[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
+	@printf "%s\n" "================================================================================"
