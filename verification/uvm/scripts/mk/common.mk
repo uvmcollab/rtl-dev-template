@@ -42,6 +42,20 @@ define print_var
 	@printf "\n"
 endef
 
+define print_var_help
+	@$(foreach var,$(1), \
+		printf "  %-20s : %s\n" \
+		"$(var)" \
+		"$(HELP_$(var))";)
+endef
+
+define print_vars_help_values
+	@$(foreach var,$(1), \
+		printf "  %-20s = %s\n" \
+		"$(var)" \
+		"$($(var))";)
+endef
+
 # ================================ DIRECTORIES =================================
 # Project paths and directory hierarchy
 
@@ -54,13 +68,13 @@ TB_DIR           := $(VRF_DIR)/uvm
 GENERAL_DIR_VARS := GIT_DIR RTL_DIR VRF_DIR COMMON_DIR TB_DIR
 
 # ------------------------------------ WORK ------------------------------------
-ROOT_DIR      := $(CURDIR)
-BUILD_DIR     := $(ROOT_DIR)/build
-RUN_DIR       := $(ROOT_DIR)/sim
-LOGS_DIR      := $(ROOT_DIR)/logs
-VERDI_DIR     := $(ROOT_DIR)/verdi
-COV_DIR       := $(ROOT_DIR)/cov
-WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
+ROOT_DIR      ?= $(CURDIR)
+BUILD_DIR      = $(ROOT_DIR)/build
+RUN_DIR        = $(ROOT_DIR)/sim
+LOGS_DIR       = $(ROOT_DIR)/logs
+VERDI_DIR      = $(ROOT_DIR)/verdi
+COV_DIR        = $(ROOT_DIR)/cov
+WORK_DIR_VARS  = ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
 
 # ---------------------------------- SCRIPTS -----------------------------------
 SCRIPTS_DIR      := $(TB_DIR)/scripts
@@ -71,9 +85,9 @@ WAVES_DIR        := $(SCRIPTS_DIR)/waves
 SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR DUMP_DIR WAVES_DIR  
 
 # ---------------------------------- COVERAGE ----------------------------------
-COV_REPORT_DIR := $(COV_DIR)/report
-COV_MERGE_DIR  := $(COV_DIR)/merge
-COV_DIR_VARS   := COV_DIR COV_REPORT_DIR COV_MERGE_DIR 
+COV_REPORT_DIR = $(COV_DIR)/report
+COV_MERGE_DIR  = $(COV_DIR)/merge
+COV_DIR_VARS   = COV_DIR COV_REPORT_DIR COV_MERGE_DIR 
 
 # ------------------------------------ UVCS ------------------------------------
 UVCS_DIR := $(TB_DIR)/uvcs
@@ -81,10 +95,7 @@ UVCS_DIR := $(TB_DIR)/uvcs
 # ------------------------------------ DPI -------------------------------------
 DPI_DIR := $(COMMON_DIR)/dpi
 
-# -------------------------------- REGRESSIONS ---------------------------------
-REGR_DIR       := $(ROOT_DIR)/regression
-
-EXTRA_DIR_VARS := UVCS_DIR DPI_DIR REGR_DIR
+EXTRA_DIR_VARS = UVCS_DIR DPI_DIR
 
 # =============================== CONFIGURATION ================================
 # User-editable knobs and defaults
@@ -92,8 +103,9 @@ EXTRA_DIR_VARS := UVCS_DIR DPI_DIR REGR_DIR
 # ---------------------------------- TEST RUN ----------------------------------
 # Test selection and basic UVM runtime options
 
-TEST      ?= top_test
+# Options: [UVM_LOW, UVM_MEDIUM, UVM_HIGH, UVM_DEBUG]
 VERBOSITY ?= UVM_MEDIUM
+TEST      ?= top_test
 
 # Options: [auto, fixed]
 SEED_MODE  ?= fixed
@@ -132,7 +144,8 @@ TEST_RUN_VARS := TEST VERBOSITY TIMESCALE \
 # --------------------- DEFINES / COMPILE ARGS / RUN ARGS ----------------------
 
 # Defines and extra compile arguments
-DEFINES      ?= +define+GIT_DIR=\"$(GIT_DIR)\"
+# Example: +define+GIT_DIR=\"$(GIT_DIR)\"
+DEFINES      ?=
 COMPILE_ARGS ?=
 
 # Runtime extra arguments
@@ -145,7 +158,7 @@ USER_ARG_VARS := DEFINES COMPILE_ARGS RUN_ARGS
 ENABLE_GUI ?= false
 
 # Run Tcl by default
-GUI_FLAGS  ?= 
+GUI_FLAGS  ?= -gui=verdi
 
 GUI_VARS   := ENABLE_GUI GUI_FLAGS
 
@@ -158,7 +171,7 @@ DEBUG_VARS = ENABLE_DEBUG_DB DEBUG_FLAGS_VCS
 
 # ------------------------------------ UVM -------------------------------------
 # Options: [true, false]
-ENABLE_UVM           ?= true
+ENABLE_UVM           ?= false
 ENABLE_UVM_RECORDING ?= false
 UVM_VERSION          ?= 1.2
 
@@ -169,8 +182,9 @@ UVM_VARS = ENABLE_UVM ENABLE_UVM_RECORDING UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_
 
 # ------------------------------- CODE COVERAGE --------------------------------
 # Options: [true, false]
-ENABLE_CODE_COV  ?= true
-CODE_COV_TYPES   ?= line+cond+fsm+branch+tgl+assert
+ENABLE_CODE_COV  ?= false
+# Options: line+cond+fsm+branch+tgl+assert
+CODE_COV_TYPES   ?= line
 COV_NAME         ?= $(SIMV_NAME)_cov
 COV_FLAGS_COMMON ?= -cm $(CODE_COV_TYPES)
 
@@ -194,12 +208,6 @@ SVA_VARS := ENABLE_SVA SVA_FLAGS_VCS SVA_FLAGS_SIMV
 
 # ================================== CONTROL ===================================
 # Derived flags / logic
-
-# ---------------------------------- GUI MODE ----------------------------------
-# Options: [true, false]
-ifeq ($(ENABLE_GUI),true)
-	GUI_FLAGS = -gui=verdi
-endif
 
 # --------------------------------- DEBUG MODE ---------------------------------
 # Options: [true, false]
@@ -322,6 +330,26 @@ CONTROL_VARS := \
 	SIMV_NAME \
 	JOB_NAME
 
+# ------------------------------- HELP MESSAGES --------------------------------
+
+HELP_TEST                 := Name of the UVM test to run
+HELP_VERBOSITY            := UVM verbosity level used during simulation
+HELP_TIMESCALE            := Simulation timescale in Verilog format (e.g. 1ns/1ps)
+HELP_ENABLE_DEBUG_DB      := Enables generation of debug database files for Verdi [true|false]
+HELP_ENABLE_UVM           := Enables UVM support during compilation [true|false]
+HELP_ENABLE_UVM_RECORDING := Enables UVM transaction and object recording [true|false]
+HELP_CODE_COV_TYPES       := Code coverage types enabled for VCS (-cm option)
+HELP_ENABLE_CODE_COV      := Enables code coverage collection [true|false]
+HELP_ENABLE_SVA           := Enables SystemVerilog Assertions (SVA) support [true|false]
+HELP_SEED_MODE            := Random seed mode [auto|fixed]
+HELP_SEED                 := Simulation random seed (integer > 0). Used only when SEED_MODE=fixed
+HELP_DUMP_MODE            := Select waveform dump configuration/script [all, default, none]
+HELP_DEFINES              := Additional Verilog/SystemVerilog defines passed to vcs
+HELP_COMPILE_ARGS         := Additional arguments passed to the vcs compile command
+HELP_RUN_ARGS             := Additional runtime arguments passed to simv
+HELP_SIMV_NAME            := Name of the generated simulation executable
+HELP_JOB_NAME             := Name of the simulation job/output directory
+
 SYNOPSYS_TOOLS = vcs urg verdi wv
 
 # =================================== MACROS ===================================
@@ -351,7 +379,7 @@ endef
 SHELL         := bash
 
 .PHONY: all
-all: help
+all: help-common
 #_______________________________________________________________________________
 
 .PHONY: check-tools
@@ -448,41 +476,28 @@ vcd2fsdb: ## COMMON: Convert VCD to FSDB
 #_______________________________________________________________________________
 
 .PHONY: compile-dpi
-compile-dpi: ## COMMON: Run dpi (C/C++) compilation
-	@echo -e "$(C_ORA)TB: Compiling dpi (C/C++) code$(NC)"
+compile-dpi: ## COMMON: Run DPI (C/C++) compilation
+	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling DPI (C/C++)"
 	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
 # -fPIC Flag to generate position-independent code (shared library)
 # If you want to compile dpi repeatedly and include the .o to simv
 # but it's better to compile from vcs command
 #_______________________________________________________________________________
 
-.PHONY: help
-help: ## COMMON: Displays help message
-	@echo -e "======================================================================"
-	@echo -e "                               MAKEFILE.UVC                           "
-	@echo -e "======================================================================"
-	@echo "Usage: make <target> <variables>"
-	@echo "--------------------------- Targets ----------------------------------"
-	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_LBL)%-15s$(NC) %s\n", $$1, $$2}'
-	@echo "--------------------------- Variables -------------------------------"
-	@echo "  TEST              : Name of UVM_TEST"
-	@echo "  VERBOSITY         : UVM_VERBOSITY of the simulation, UVM_MEDIUM"
-	@echo "  SEED_MODE         : Select seed mode [auto|fixed]"
-	@echo "  SEED              : Random seed used, must be an integer > 0"
-	@echo "  ENABLE_GUI        : Enables to run the sim in gui mode [true|false]"
-	@echo "  ENABLE_CODE_COV   : Enables code coverage [true|false]"
-	@echo "  DEFINES           : Add defines to vcs command"
-	@echo "  RUN_ARGS          : Add plusargs to simv command"
-	@echo "  JOB_NAME          : Name of the job (simulation folder)"
-	@echo "-------------------------- Variable Values --------------------------"
-	@echo "  TEST              : $(TEST)"
-	@echo "  VERBOSITY         : $(VERBOSITY)"
-	@echo "  SEED_MODE         : $(SEED_MODE)"
-	@echo "  SEED              : $(SEED)"
-	@echo "  ENABLE_GUI        : $(ENABLE_GUI)"
-	@echo "  ENABLE_CODE_COV   : $(ENABLE_CODE_COV)"
-	@echo "  DEFINES           : $(DEFINES)"
-	@echo "  RUN_ARGS          : $(RUN_ARGS)"
-	@echo "  JOB_NAME          : $(JOB_NAME)"
-	@echo "======================================================================"
+#@printf "%s\n" "$(MAKEFILE_LIST)"
+#@printf "%s\n" "                                    PROJECT.MK                                  "
+.PHONY: help-common
+help-common: ## COMMON: Displays help message
+	@printf "%s\n" "================================================================================"
+	@printf "%s\n" "                                    COMMON.MK                                   "
+	@printf "%s\n" "================================================================================"
+	@printf "%s\n" "Usage: make <target> [variables]"
+	@printf "%s\n" "------------------------------------ TARGETS -----------------------------------"
+	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MK_DIR)/common.mk | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
+	@printf "%s\n" "----------------------------------- VARIABLES ----------------------------------"
+	$(call print_var_help,$(CONTROL_VARS))
+	@printf "%s\n" "--------------------------------- CURRENT VALUES -------------------------------"
+	$(call print_vars_help_values,$(CONTROL_VARS))
+	@printf "%s\n" "================================================================================"
 #_______________________________________________________________________________
