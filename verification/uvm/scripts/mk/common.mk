@@ -131,7 +131,7 @@ WORKSPACE_VARS := SIMV_NAME JOB_NAME $(WORKSPACE_DIR_VARS)
 
 # ---------------------------- UCLI DUMP SELECTION -----------------------------
 # Options: [default, all, none]
-DUMP_MODE    ?= default
+DUMP_MODE    ?= none
 DUMP_LIB_TCL := $(DUMP_DIR)/dump_lib.tcl
 UCLI_FLAGS    = -ucli -do $(DUMP_DIR)/$(DUMP_MODE).tcl
 
@@ -346,7 +346,7 @@ HELP_ENABLE_CODE_COV      := Enables code coverage collection [true|false]
 HELP_ENABLE_SVA           := Enables SystemVerilog Assertions (SVA) support [true|false]
 HELP_SEED_MODE            := Random seed mode [auto|fixed]
 HELP_SEED                 := Simulation random seed (integer > 0). Used only when SEED_MODE=fixed
-HELP_DUMP_MODE            := Select waveform dump configuration/script [all, default, none]
+HELP_DUMP_MODE            := Select waveform dump configuration/script [all, default, none]. Requires ENABLE_DEBUG_DB=true
 HELP_DEFINES              := Additional Verilog/SystemVerilog defines passed to vcs
 HELP_COMPILE_ARGS         := Additional arguments passed to the vcs compile command
 HELP_RUN_ARGS             := Additional runtime arguments passed to simv
