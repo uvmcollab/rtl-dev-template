@@ -50,3 +50,32 @@ JOB_NAME             = debug
 UVCS_FILELIST        = -F /home/bermudez/Documents/uvmcollab/rtl-dev-template/verification/uvm/uvcs.f
 DPI_FILE             = 
 ```
+
+
+```bash
+Compile time
+  TIMESCALE            = 1ps/100fs
+  ENABLE_UVM           = false
+  ENABLE_DEBUG_DB      = false
+  DEFINES              = 
+  COMPILE_ARGS         = 
+  SIMV_NAME            = simv
+  UVCS_FILELIST        = 
+  DPI_FILE             = /home/bermudez/Documents/uvmcollab/rtl-dev-template/verification/common/dpi/lib/libdpi.so
+
+Simulation time
+  TEST                 = top_test
+  VERBOSITY            = UVM_MEDIUM
+  ENABLE_UVM_RECORDING = false
+  SEED_MODE            = fixed
+  SEED                 = 5081996
+  DUMP_MODE            = none
+  RUN_ARGS             = 
+  JOB_NAME             = debug
+
+Mixed
+  CODE_COV_TYPES       = line
+  ENABLE_CODE_COV      = false
+  ENABLE_SVA           = false
+```
+

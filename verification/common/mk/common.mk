@@ -340,6 +340,32 @@ CONTROL_VARS := \
 	UVCS_FILELIST \
 	DPI_FILE
 
+COMPILE_TIME_VARIABLES := \
+	TIMESCALE \
+	ENABLE_UVM \
+	ENABLE_DEBUG_DB \
+	DEFINES \
+	COMPILE_ARGS \
+	SIMV_NAME \
+	UVCS_FILELIST \
+	DPI_FILE
+
+SIMULATION_VARIABLES := \
+	TEST \
+	VERBOSITY \
+	ENABLE_UVM_RECORDING \
+	SEED_MODE \
+	SEED \
+	DUMP_MODE \
+	RUN_ARGS \
+	JOB_NAME
+
+# SVA and Coverage requires recompilation to work properly
+MIXED_VARIABLES := \
+	ENABLE_CODE_COV \
+	CODE_COV_TYPES \
+	ENABLE_SVA
+
 # ------------------------------- HELP MESSAGES --------------------------------
 
 HELP_TEST                 := Name of the UVM test to run
@@ -422,6 +448,9 @@ print-vars: ## COMMON: Print Makefile variables
 	$(call print_vars,SVA variables,$(SVA_VARS))
 	$(call print_vars,Debug variables,$(DEBUG_VARS))
 	$(call print_vars,Control variables,$(CONTROL_VARS))
+	$(call print_vars,Compile-time variables,$(COMPILE_TIME_VARIABLES))
+	$(call print_vars,Simulation variables,$(SIMULATION_VARIABLES))
+	$(call print_vars,Mixed variables,$(MIXED_VARIABLES))
 	$(call print_var,VCS_FLAGS)
 	$(call print_var,SIMV_FLAGS)
 	$(call print_var,URG_FLAGS)
@@ -500,7 +529,13 @@ help-common: ## COMMON: Displays help message
 	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
 	@printf "%s\n" "----------------------------------- VARIABLES ----------------------------------"
 	$(call print_var_help,$(CONTROL_VARS))
-	@printf "%s\n" "--------------------------------- CURRENT VALUES -------------------------------"
-	$(call print_vars_help_values,$(CONTROL_VARS))
+# 	@printf "%s\n" "--------------------------------- CURRENT VALUES -------------------------------"
+# 	$(call print_vars_help_values,$(CONTROL_VARS))
+	@printf "%s\n" "---------------------------------- COMPILE TIME --------------------------------"
+	$(call print_vars_help_values,$(COMPILE_TIME_VARIABLES))
+	@printf "%s\n" "------------------------------------ RUN TIME ----------------------------------"
+	$(call print_vars_help_values,$(SIMULATION_VARIABLES))
+	@printf "%s\n" "------------------------------------- MIXED ------------------------------------"
+	$(call print_vars_help_values,$(MIXED_VARIABLES))
 	@printf "%s\n" "================================================================================"
 #_______________________________________________________________________________
