@@ -67,8 +67,15 @@ GIT_DIR          := $(shell git rev-parse --show-toplevel)
 RTL_DIR          := $(GIT_DIR)/rtl
 VRF_DIR          := $(GIT_DIR)/verification
 COMMON_DIR       := $(VRF_DIR)/common
-TB_DIR           := $(VRF_DIR)/uvm
+TB_DIR           ?= $(VRF_DIR)/uvm
 GENERAL_DIR_VARS := GIT_DIR RTL_DIR VRF_DIR COMMON_DIR TB_DIR
+
+# ----------------------------------- COMMON -----------------------------------
+COMMON_TCL_DIR   = $(COMMON_DIR)/tcl
+COMMON_MK_DIR    = $(COMMON_DIR)/mk
+DUMP_DIR         = $(COMMON_TCL_DIR)/dump
+DPI_DIR          = $(COMMON_DIR)/dpi
+COMMON_DIR_VARS := COMMON_TCL_DIR COMMON_MK_DIR DUMP_DIR DPI_DIR
 
 # ------------------------------------ WORK ------------------------------------
 ROOT_DIR      ?= $(CURDIR)
@@ -83,9 +90,8 @@ WORK_DIR_VARS := ROOT_DIR BUILD_DIR RUN_DIR LOGS_DIR VERDI_DIR COV_DIR
 SCRIPTS_DIR      := $(TB_DIR)/scripts
 MK_DIR           := $(SCRIPTS_DIR)/mk
 TCL_DIR          := $(SCRIPTS_DIR)/tcl
-DUMP_DIR         := $(TCL_DIR)/dump
 WAVES_DIR        := $(SCRIPTS_DIR)/waves
-SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR DUMP_DIR WAVES_DIR  
+SCRIPTS_DIR_VARS := SCRIPTS_DIR MK_DIR TCL_DIR WAVES_DIR  
 
 # ---------------------------------- COVERAGE ----------------------------------
 COV_REPORT_DIR  = $(COV_DIR)/report
@@ -95,10 +101,7 @@ COV_DIR_VARS   := COV_DIR COV_REPORT_DIR COV_MERGE_DIR
 # ------------------------------------ UVCS ------------------------------------
 UVCS_DIR = $(TB_DIR)/uvcs
 
-# ------------------------------------ DPI -------------------------------------
-DPI_DIR = $(COMMON_DIR)/dpi
-
-EXTRA_DIR_VARS := UVCS_DIR DPI_DIR
+EXTRA_DIR_VARS := UVCS_DIR
 
 # =============================== CONFIGURATION ================================
 # User-editable knobs and defaults
@@ -178,8 +181,8 @@ ENABLE_UVM           ?= false
 ENABLE_UVM_RECORDING ?= false
 UVM_VERSION          ?= 1.2
 
-UVM_FLAGS_VCS  ?= 
-UVM_FLAGS_SIMV ?= 
+UVM_FLAGS_VCS  ?=
+UVM_FLAGS_SIMV ?=
 
 UVM_VARS := ENABLE_UVM ENABLE_UVM_RECORDING UVM_VERSION UVM_FLAGS_SIMV UVM_FLAGS_VCS
 
@@ -256,10 +259,10 @@ endif
 # ================================ TOOLS SETUP =================================
 
 # --------------------------------- FILE LISTS ---------------------------------
-RTL_FILELIST  = -F $(RTL_DIR)/rtl.f
-TB_FILELIST   = -F $(TB_DIR)/uvm.f
-UVCS_FILELIST = -F $(TB_DIR)/uvcs.f
-FILES         = $(UVCS_FILELIST) $(RTL_FILELIST) $(TB_FILELIST)
+RTL_FILELIST   = -F $(RTL_DIR)/rtl.f
+TB_FILELIST    = -F $(TB_DIR)/tb.f
+UVCS_FILELIST ?=
+FILES          = $(UVCS_FILELIST) $(RTL_FILELIST) $(TB_FILELIST)
 
 # ------------------------------------ DPI -------------------------------------
 DPI_FILE ?=
@@ -308,6 +311,7 @@ TOOLS_FLAGS_VARS := VCS_FLAGS SIMV_FLAGS URG_FLAGS VERDI_FLAGS VERDI_COV_FLAGS
 
 DIR_VARS := \
 	$(GENERAL_DIR_VARS) \
+	$(COMMON_DIR_VARS) \
 	$(WORK_DIR_VARS) \
 	$(SCRIPTS_DIR_VARS) \
 	$(COV_DIR_VARS) \
@@ -331,7 +335,9 @@ CONTROL_VARS := \
 	COMPILE_ARGS \
 	RUN_ARGS \
 	SIMV_NAME \
-	JOB_NAME
+	JOB_NAME \
+	UVCS_FILELIST \
+	DPI_FILE
 
 # ------------------------------- HELP MESSAGES --------------------------------
 
@@ -478,15 +484,6 @@ vcd2fsdb: ## COMMON: Convert VCD to FSDB
 	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
 #_______________________________________________________________________________
 
-.PHONY: compile-dpi
-compile-dpi: ## COMMON: Run DPI (C/C++) compilation
-	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling DPI (C/C++)"
-	g++ -fPIC -c $(DPI_FILE) -I ${VCS_HOME}/include -o $(DPI_DIR)/dpi.o
-# -fPIC Flag to generate position-independent code (shared library)
-# If you want to compile dpi repeatedly and include the .o to simv
-# but it's better to compile from vcs command
-#_______________________________________________________________________________
-
 #@printf "%s\n" "$(MAKEFILE_LIST)"
 #@printf "%s\n" "                                    PROJECT.MK                                  "
 .PHONY: help-common
@@ -496,7 +493,7 @@ help-common: ## COMMON: Displays help message
 	@printf "%s\n" "================================================================================"
 	@printf "%s\n" "Usage: make <target> [variables]"
 	@printf "%s\n" "------------------------------------ TARGETS -----------------------------------"
-	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MK_DIR)/common.mk | \
+	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(COMMON_MK_DIR)/common.mk | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
 	@printf "%s\n" "----------------------------------- VARIABLES ----------------------------------"
 	$(call print_var_help,$(CONTROL_VARS))

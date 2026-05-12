@@ -1,38 +1,17 @@
-# UVM Verification
-
+# RTL Development Template
 
 ## Setup
 
-> **Note:** The `Makefile` expects a git project to setup the environment variables
+1. Copy your `setup_synopsys_eda.[tc]sh` inside `verification/common/setup/setup_synopsys_eda.[tc]sh`, this file 
+   is automatically ignore so don't worry about creating a commit of this file.
 
-> **Note:** Before running the setup, make sure to place your own `setup_synopsys_eda.sh` file in the `scripts/setup/` directory.
-
-> **Note:** This setup only needs to be executed once. Afterward, simply navigate to `work/uvm` and source your setup file.
-
-From the root directory run the following:
-
-### For bash
+2. From the root directory run the following:
 
 ```bash
-export GIT_ROOT="$(git rev-parse --show-toplevel)"
-export UVM_WORK="$GIT_ROOT/work/uvm"
-export UVM_SCRIPTS = "$GIT_ROOT/verification/uvm/scripts"
-mkdir -p "$UVM_WORK" && cd "$UVM_WORK"
-ln -sf $UVM_SCRIPTS/makefiles/Makefile.vcs Makefile
-ln -sf $UVM_SCRIPTS/setup/setup_synopsys_eda.sh
-source setup_synopsys_eda.sh
-make
+# For bash
+source verification/uvm/scripts/setup/setup_uvm.sh
+# For tcsh
+source verification/uvm/scripts/setup/setup_uvm.tcsh
 ```
 
-### For tcsh
-
-```bash
-setenv GIT_ROOT `git rev-parse --show-toplevel`
-setenv UVM_WORK $GIT_ROOT/work/uvm
-setenv UVM_SCRIPTS $GIT_ROOT/verification/uvm/scripts
-mkdir -p $UVM_WORK && cd $UVM_WORK
-ln -sf $UVM_SCRIPTS/makefiles/Makefile.vcs Makefile
-ln -sf $UVM_SCRIPTS/setup/setup_synopsys_eda.tcsh
-source setup_synopsys_eda.tcsh
-make
-``
+> Important: remember that you need to run this just one

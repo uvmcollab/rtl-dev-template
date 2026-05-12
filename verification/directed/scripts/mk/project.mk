@@ -15,15 +15,15 @@
 # Project paths and directory hierarchy
 
 GIT_DIR       := $(shell git rev-parse --show-toplevel)
-TB_DIR        ?= $(GIT_DIR)/verification/uvm
+TB_DIR        ?= $(GIT_DIR)/verification/directed
 COMMON_MK_DIR := $(GIT_DIR)/verification/common/mk
 DPI_DIR       := $(GIT_DIR)/verification/common/dpi
 
 # =============================== CONFIGURATION ================================
 # Project-specific defaults
 
-ENABLE_UVM    ?= true
-UVCS_FILELIST ?= -F $(TB_DIR)/uvcs.f
+ENABLE_UVM ?= false
+DPI_FILE   ?= $(DPI_DIR)/lib/libdpi.so
 
 # ================================== INCLUDES ==================================
 

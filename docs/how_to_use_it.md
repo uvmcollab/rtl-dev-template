@@ -13,8 +13,8 @@ source verification/uvm/scripts/setup/setup_uvc.sh
 
 > Remember: this should be run JUST ONCE
 
-The user need to modify just:
-- `uvm.f`
+The user needs to modify just:
+- `tb.f`
 - `uvc.f`
 - `verification/uvm/`
     - `env/*`
@@ -24,20 +24,26 @@ The user need to modify just:
 Touch only if you know what you are doing:
 - `common.mk`
 
-
-## Basic control variables
+## Control variables
 
 ```plain
-TEST              = top_test
-VERBOSITY         = UVM_MEDIUM
-CODE_COV_TYPES    = line+cond+fsm+branch+tgl+assert
-ENABLE_CODE_COV   = true
-ENABLE_SVA        = false
-SEED_MODE         = fixed
-SEED              = 5081996
-VCS_DEFINES       = +define+GIT_DIR="/home/bermudez/Documents/uvmcollab/rtl-dev-template"
-DUMP_MODE         = default
-RUN_ARGS          = 
-SIMV_NAME         = simv
-JOB_NAME          = debug
+TEST                 = top_test
+VERBOSITY            = UVM_MEDIUM
+TIMESCALE            = 1ps/100fs
+ENABLE_DEBUG_DB      = false
+ENABLE_UVM           = true
+ENABLE_UVM_RECORDING = false
+CODE_COV_TYPES       = line
+ENABLE_CODE_COV      = false
+ENABLE_SVA           = false
+SEED_MODE            = fixed
+SEED                 = 5081996
+DUMP_MODE            = none
+DEFINES              = 
+COMPILE_ARGS         = 
+RUN_ARGS             = 
+SIMV_NAME            = simv
+JOB_NAME             = debug
+UVCS_FILELIST        = -F /home/bermudez/Documents/uvmcollab/rtl-dev-template/verification/uvm/uvcs.f
+DPI_FILE             = 
 ```
