@@ -98,7 +98,7 @@ task top_test_vseq::body();
   end
 
   // Drain time
-  #(20000ns);
+  #(100 * 1ns);
 
   // Signature
   `uvm_info(get_type_name(), signature(), UVM_MEDIUM)

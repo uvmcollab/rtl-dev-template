@@ -21,8 +21,25 @@ COMMON_MK_DIR := $(GIT_DIR)/verification/common/mk
 # =============================== CONFIGURATION ================================
 # Project-specific defaults
 
-ENABLE_UVM    ?= true
-UVCS_FILELIST ?= -F $(TB_DIR)/uvcs.f
+ENABLE_UVM           ?= true
+ENABLE_DEBUG_DB      ?= false
+ENABLE_UVM_RECORDING ?= false
+DUMP_MODE            ?= none
+UVCS_FILELIST        ?= -F $(TB_DIR)/uvcs.f
+DPI_FILE             ?= $(DPI_DIR)/lib/libdpi.so
+COMPILE_ARGS         ?=
+#-cm_hier $(ROOT_DIR)/cov.cfg
+
+# Coverage
+ENABLE_CODE_COV_COMPILE ?= false
+CODE_COV_TYPES_COMPILE ?= line+cond+tgl
+
+ENABLE_CODE_COV_RUN ?= false
+CODE_COV_TYPES_RUN ?= line+cond+tgl
+
+RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,100 \
+			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_asserted,120 \
+			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_deasserted,120
 
 # ================================== INCLUDES ==================================
 
@@ -31,6 +48,9 @@ include $(COMMON_MK_DIR)/common.mk
 
 # DPI
 -include $(COMMON_MK_DIR)/dpi.mk
+
+# Coverage
+-include $(COMMON_MK_DIR)/cov.mk
 
 # Regression Manager
 -include $(MK_DIR)/regression.mk

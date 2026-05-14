@@ -32,6 +32,13 @@ class top_scoreboard extends uvm_scoreboard;
   // Reference model
   extern function debouncer_uvc_sequence_item debouncer_ref(bit rst, bit sw);
 
+  covergroup cg_cycle_counter;
+  option.per_instance = 1;
+    coverpoint cycle_counter {
+      bins cycle_ranges[20] = {[0:99]};
+    }
+  endgroup
+
 endclass : top_scoreboard
 
 
@@ -39,6 +46,7 @@ function top_scoreboard::new(string name, uvm_component parent);
   super.new(name, parent);
   m_num_passed = 0;
   m_num_failed = 0;
+  cg_cycle_counter = new();
 endfunction : new
 
 
@@ -56,7 +64,6 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   received_trans = debouncer_uvc_sequence_item::type_id::create("received_trans");
   received_trans.copy(t);
 
-  
   // Reference model
   reference_trans = debouncer_ref(received_trans.m_rst_i, received_trans.m_sw_i);
   
@@ -128,11 +135,15 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
       cycle_counter = 0;
       value_to_load = sw;
     end else begin
-      cycle_counter++;
+      if (cycle_counter != 99) begin
+        cycle_counter++;
+      end
     end
 
     // Update state
     sw_state = sw;
+    // Sample functional coverage
+    cg_cycle_counter.sample();
   end
 
   prediction.m_rst_i = rst;
@@ -151,7 +162,8 @@ endtask : run_phase
 
 
 function void top_scoreboard::report_phase(uvm_phase phase);
-  `uvm_info(get_type_name(), $sformatf("PASSED: %5d, FAILED: %5d", m_num_passed, m_num_failed), UVM_MEDIUM)
+  `uvm_info(get_type_name(), $sformatf("\nPASSED: %5d, FAILED: %5d", m_num_passed, m_num_failed), UVM_MEDIUM)
+  `uvm_info(get_type_name(), $sformatf("\nFinal Coverage = %3.2f", cg_cycle_counter.get_coverage()), UVM_MEDIUM)
 endfunction : report_phase
 
 
