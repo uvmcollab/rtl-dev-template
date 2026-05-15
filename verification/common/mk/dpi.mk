@@ -17,40 +17,40 @@
 
 # ================================ DIRECTORIES =================================
 
-SRC_DIR := $(DPI_DIR)/src
-OBJ_DIR := $(DPI_DIR)/obj
-BIN_DIR := $(DPI_DIR)/bin
-INC_DIR := $(DPI_DIR)/include
-LIB_DIR := $(DPI_DIR)/lib
+DPI_SRC_DIR := $(COMMON_DPI_DIR)/src
+DPI_OBJ_DIR := $(COMMON_DPI_DIR)/obj
+DPI_BIN_DIR := $(COMMON_DPI_DIR)/bin
+DPI_INC_DIR := $(COMMON_DPI_DIR)/include
+DPI_LIB_DIR := $(COMMON_DPI_DIR)/lib
 
-DPI_DIR_VARS := SRC_DIR OBJ_DIR BIN_DIR INC_DIR LIB_DIR
+DPI_DIR_VARS := DPI_SRC_DIR DPI_OBJ_DIR DPI_BIN_DIR DPI_INC_DIR DPI_LIB_DIR
 
 # Compiler and flags
 CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I ./$(INC_DIR)
+CXXFLAGS := -Wall -Wextra -std=c++17 -I $(DPI_INC_DIR)
 LDFLAGS  :=
 
-DPI_LIB_NAME = libdpi.so
+DPI_LIB_NAME ?= libdpi.so
 
 # Output executable
-TARGET := $(BIN_DIR)/app
+TARGET := $(DPI_BIN_DIR)/app
 
 # Files
-SRCS := $(shell find $(SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "hack_dpi.cpp")
-OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
-OBJS := $(patsubst $(SRC_DIR)/%.cc, $(OBJ_DIR)/%.o, $(OBJS))
+SRCS := $(shell find $(DPI_SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "hack_dpi.cpp")
+OBJS := $(patsubst $(DPI_SRC_DIR)/%.cpp, $(DPI_OBJ_DIR)/%.o, $(SRCS))
+OBJS := $(patsubst $(DPI_SRC_DIR)/%.cc, $(DPI_OBJ_DIR)/%.o, $(OBJS))
 
 # ================================  TARGETS  ==================================
 
 # Rule to compile source files to object files cpp
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(DPI_OBJ_DIR)/%.o: $(DPI_SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	@printf "$(C_CYN)%s$(C_RST)\n" "Compiled: $< -> $@"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 #______________________________________________________________________________
 	
 # Rule to compile source files to object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc
+$(DPI_OBJ_DIR)/%.o: $(DPI_SRC_DIR)/%.cc
 	@mkdir -p $(dir $@)
 	@printf "$(C_CYN)%s$(C_RST)\n" "Compiled: $< -> $@"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -58,7 +58,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cc
 
 # Rule to create the executable
 $(TARGET): $(OBJS)
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(DPI_BIN_DIR)
 	@printf "$(C_CYN)%s$(C_RST)\n" "Linked: $@"
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 #______________________________________________________________________________
@@ -76,16 +76,21 @@ run: ## DPI: Run standalone DPI application
 .PHONY: build-dpi
 build-dpi: ## DPI: Build DPI shared library for VCS
 	@printf "$(C_CYN)%s$(C_RST)\n" "Compiling DPI shared library"
-	@mkdir -p $(LIB_DIR)
-	$(CXX) -fPIC -shared -std=c++17 -o $(LIB_DIR)/$(DPI_LIB_NAME) \
-	-I ${VCS_HOME}/include -I $(INC_DIR) \
-	$(SRC_DIR)/dpi.cpp
+	@mkdir -p $(DPI_LIB_DIR)
+	$(CXX) -fPIC -shared -std=c++17 -o $(DPI_LIB_DIR)/$(DPI_LIB_NAME) \
+	-I ${VCS_HOME}/include -I $(DPI_INC_DIR) \
+	$(DPI_SRC_DIR)/dpi.cpp
 #______________________________________________________________________________
 
 .PHONY: clean-dpi
 clean-dpi: ## DPI: Remove DPI files
 	@printf "$(C_CYN)%s$(C_RST)\n" "Removing compilation files"
-	rm -rf $(OBJ_DIR) $(BIN_DIR) $(LIB_DIR)
+	rm -rf $(DPI_OBJ_DIR) $(DPI_BIN_DIR) $(DPI_LIB_DIR)
+#______________________________________________________________________________
+
+.PHONY: print-dpi
+print-dpi: ## DPI: Print Makefile variables
+	$(call print_vars,DPI Directory variables,$(DPI_DIR_VARS))
 #______________________________________________________________________________
 
 help-dpi: ## DPI: Displays help message

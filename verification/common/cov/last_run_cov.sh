@@ -15,17 +15,18 @@
 ## [Revisions]      -
 ##==============================================================================
 
-##                    RUN_COV_DB
-##                    BUILD_COV_DB
-
 # Exit on errors, undefined variables, and pipeline failures
 set -euo pipefail
 
-# CLI parsing
+# -------------------------------- CLI PARSING ---------------------------------
+
 RUN_DIR="${1:?missing RUN_DIR}"
 RUN_MANIFEST_GLOB="${2:?missing RUN_MANIFEST_GLOB}"
 URG_COMMON_FLAGS="${3:?missing URG_COMMON_FLAGS}"
 
+# ------------------------------------ LOAD ------------------------------------
+
+# Get the last run manifest file
 RUN_MANIFEST_FILE="$(
     find "$RUN_DIR" -type f -name "$RUN_MANIFEST_GLOB" -printf '%T@ %p\n' |
     sort -n |
@@ -33,22 +34,24 @@ RUN_MANIFEST_FILE="$(
     cut -d' ' -f2-
 )"
 
+# Check if no manifest is found
 if [[ -z "$RUN_MANIFEST_FILE" ]]; then
     printf '[FAIL] %s\n' "No run manifest found"
     exit 1
 fi
 
-printf '[INFO] %s\n' "Using run manifest: $RUN_MANIFEST_FILE"
-
+# printf '[INFO] %s\n' "Using run manifest: $RUN_MANIFEST_FILE"
 source "$RUN_MANIFEST_FILE"
 
 # ----------------------------------- CHECKS -----------------------------------
 
+# Check if the value exists in the manifest
 if [[ -z "${RUN_COV_DB:-}" ]]; then
     printf '[FAIL] %s\n' "RUN_COV_DB is empty"
     exit 1
 fi
 
+# Check if the directory exists
 if [[ ! -d "$RUN_COV_DB" ]]; then
     printf '[FAIL] %s\n' "RUN_COV_DB does not exist: $RUN_COV_DB"
     exit 1
@@ -56,27 +59,30 @@ fi
 
 # --------------------------------- MAIN LOGIC ---------------------------------
 
+# Check if code coverage was enabled at run time
 if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
+
+    # Check if the value exists
     if [[ -z "${BUILD_MANIFEST_FILE:-}" ]]; then
-            printf '[FAIL] %s\n' "BUILD_MANIFEST_FILE is empty"
-            exit 1
+        printf '[FAIL] %s\n' "BUILD_MANIFEST_FILE is empty"
+        exit 1
     fi
 
     if [[ ! -f "$BUILD_MANIFEST_FILE" ]]; then
-            printf '[FAIL] %s\n' "Build manifest does not exist: $BUILD_MANIFEST_FILE"
-            exit 1
+        printf '[FAIL] %s\n' "Build manifest does not exist: $BUILD_MANIFEST_FILE"
+        exit 1
     fi
 
     source "$BUILD_MANIFEST_FILE"
 
     if [[ -z "${BUILD_COV_DB:-}" ]]; then
-            printf '[FAIL] %s\n' "BUILD_COV_DB is empty"
-            exit 1
+        printf '[FAIL] %s\n' "BUILD_COV_DB is empty"
+        exit 1
     fi
 
     if [[ ! -d "$BUILD_COV_DB" ]]; then
-            printf '[FAIL] %s\n' "BUILD_COV_DB does not exist: $BUILD_COV_DB"
-            exit 1
+        printf '[FAIL] %s\n' "BUILD_COV_DB does not exist: $BUILD_COV_DB"
+        exit 1
     fi
 
     printf '[INFO] %s\n' "Merging run + build coverage"

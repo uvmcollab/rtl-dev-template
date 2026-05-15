@@ -20,8 +20,12 @@ RUN_MANIFEST_EXT    ?= coverage.mk
 RUN_MANIFEST_GLOB   ?= *.$(RUN_MANIFEST_EXT)
 BUILD_MANIFEST_GLOB ?= $(BUILD_MANIFEST_NAME)
 
+# ================================ DIRECTORIES =================================
+
 COV_MERGE_NAME ?= merged.vdb
 COV_MERGE_DB   ?= $(COV_MERGE_DIR)/$(COV_MERGE_NAME)
+
+# ================================ TOOLS SETUP =================================
 
 URG_COMMON_FLAGS = -full64 -format both \
 				 -report $(COV_REPORT_DIR) \
@@ -31,28 +35,26 @@ URG_COMMON_FLAGS = -full64 -format both \
 
 VERDI_COV_FLAGS ?= -q -cov -covdir $(COV_MERGE_DB)
 
-# ================================ DIRECTORIES =================================
-
 # ================================  TARGETS  ==================================
 
-.PHONY: cov-list-builds
-cov-list-builds: ## COV: List all build coverage manifests
-	@printf "$(C_CYN)%s$(C_RST)\n" "Build manifests"
-	@find $(BUILD_DIR) -type f -name "$(BUILD_MANIFEST_GLOB)" | sort
-#______________________________________________________________________________
+# .PHONY: cov-list-builds
+# cov-list-builds: ## COV: List all build coverage manifests
+# 	@printf "$(C_CYN)%s$(C_RST)\n" "Build manifests"
+# 	@find $(BUILD_DIR) -type f -name "$(BUILD_MANIFEST_GLOB)" | sort
+# #______________________________________________________________________________
 
-.PHONY: cov-list-runs
-cov-list-runs: ## COV: List all run coverage manifests
-	@printf "$(C_CYN)%s$(C_RST)\n" "Run manifests"
-	@find $(RUN_DIR) -type f -name "$(RUN_MANIFEST_GLOB)" | sort
-#______________________________________________________________________________
+# .PHONY: cov-list-runs
+# cov-list-runs: ## COV: List all run coverage manifests
+# 	@printf "$(C_CYN)%s$(C_RST)\n" "Run manifests"
+# 	@find $(RUN_DIR) -type f -name "$(RUN_MANIFEST_GLOB)" | sort
+# #______________________________________________________________________________
 
-.PHONY: cov-last-manifest
-cov-last-manifest: ## COV: Print latest run coverage manifest
-	@printf "$(C_CYN)%s$(C_RST)\n" "Last manifest"
-	@find $(RUN_DIR) -type f -name "$(RUN_MANIFEST_GLOB)" -printf '%T@ %p\n' | \
-			sort -n | tail -n -1 | cut -d' ' -f2-
-#______________________________________________________________________________
+# .PHONY: cov-last-manifest
+# cov-last-manifest: ## COV: Print latest run coverage manifest
+# 	@printf "$(C_CYN)%s$(C_RST)\n" "Last manifest"
+# 	@find $(RUN_DIR) -type f -name "$(RUN_MANIFEST_GLOB)" -printf '%T@ %p\n' | \
+# 			sort -n | tail -n -1 | cut -d' ' -f2-
+# #______________________________________________________________________________
 
 .PHONY: clean-cov
 clean-cov: ## COV: Remove coverage files and manifests
@@ -69,8 +71,8 @@ clean-cov: ## COV: Remove coverage files and manifests
 .PHONY: cov
 cov: ## COV: Generating coverate from last run
 	@printf "$(C_CYN)%s$(C_RST)\n" "Generating coverage from the last run"
-	@mkdir -p $(COV_DIR)/logs
-	@bash $(COMMON_DIR)/cov/last_run_cov.sh $(RUN_DIR) $(RUN_MANIFEST_GLOB) "$(URG_COMMON_FLAGS)"
+	@mkdir -p $(COV_LOGS_DIR)
+	@bash $(COMMON_COV_DIR)/last_run_cov.sh $(RUN_DIR) $(RUN_MANIFEST_GLOB) "$(URG_COMMON_FLAGS)"
 #______________________________________________________________________________
 
 .PHONY: verdi-cov
@@ -84,9 +86,16 @@ verdi-cov: ## COMMON: Open coverage report in Verdi
 play: 
 	@find $(BUILD_DIR) -depth -type d -name "*.vdb"
 
+
+.PHONY: print-cov
+print-cov: ## COV: Print Makefile variables
+	$(call print_var,URG_COMMON_FLAGS)
+	$(call print_var,VERDI_COV_FLAGS)
+#______________________________________________________________________________
+
 help-cov: ## COV: Displays help message
 	@printf "%s\n" "================================================================================"
-	@printf "%s\n" "                                       DPI.MK                                   "
+	@printf "%s\n" "                                       COB.MK                                   "
 	@printf "%s\n" "================================================================================"
 	@printf "%s\n" "Usage: make <target> [variables]"
 	@printf "%s\n" "------------------------------------ TARGETS -----------------------------------"

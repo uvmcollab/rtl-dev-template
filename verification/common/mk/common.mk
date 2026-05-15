@@ -338,32 +338,10 @@ DIR_VARS := \
 	$(EXTRA_DIR_VARS) \
 	$(WORKSPACE_DIR_VARS)
 
-CONTROL_VARS := \
-	TEST \
-	VERBOSITY \
-	TIMESCALE \
-	ENABLE_DEBUG_DB \
-	ENABLE_UVM \
-	ENABLE_UVM_RECORDING \
-	ENABLE_CODE_COV_COMPILE \
-	CODE_COV_TYPES_COMPILE \
-	ENABLE_CODE_COV_RUN \
-	CODE_COV_TYPES_RUN \
-	ENABLE_SVA \
-	SEED_MODE \
-	SEED \
-	DUMP_MODE \
-	DEFINES \
-	COMPILE_ARGS \
-	RUN_ARGS \
-	SIMV_NAME \
-	JOB_NAME \
-	UVCS_FILELIST \
-	DPI_FILE
-
 COMPILE_TIME_VARIABLES := \
 	TIMESCALE \
 	ENABLE_UVM \
+	UVM_VERSION \
 	ENABLE_DEBUG_DB \
 	DEFINES \
 	COMPILE_ARGS \
@@ -376,12 +354,12 @@ COMPILE_TIME_VARIABLES := \
 SIMULATION_VARIABLES := \
 	TEST \
 	VERBOSITY \
-	ENABLE_UVM_RECORDING \
 	SEED_MODE \
 	SEED \
-	DUMP_MODE \
+	ENABLE_UVM_RECORDING \
 	ENABLE_CODE_COV_RUN \
 	CODE_COV_TYPES_RUN \
+	DUMP_MODE \
 	RUN_ARGS \
 	JOB_NAME
 
@@ -389,30 +367,39 @@ SIMULATION_VARIABLES := \
 MIXED_VARIABLES := \
 	ENABLE_SVA
 
+CONTROL_VARS := \
+	$(COMPILE_TIME_VARIABLES) \
+	$(SIMULATION_VARIABLES) \
+	$(MIXED_VARIABLES)
+
 # ------------------------------- HELP MESSAGES --------------------------------
 
-HELP_TEST                    := Name of the UVM test to run
-HELP_VERBOSITY               := UVM verbosity level used during simulation
+# Compile time
 HELP_TIMESCALE               := Simulation timescale in Verilog format (e.g. 1ns/1ps)
-HELP_ENABLE_DEBUG_DB         := Enables generation of debug database files for Verdi [true|false]
 HELP_ENABLE_UVM              := Enables UVM support during compilation [true|false]
-HELP_ENABLE_UVM_RECORDING    := Enables UVM transaction and object recording [true|false]
-HELP_ENABLE_CODE_COV         := Enables code coverage collection [true|false]
-HELP_ENABLE_SVA              := Enables SystemVerilog Assertions (SVA) support [true|false]
-HELP_SEED_MODE               := Random seed mode [auto|fixed]
-HELP_SEED                    := Simulation random seed (integer > 0). Used only when SEED_MODE=fixed
-HELP_DUMP_MODE               := Select waveform dump configuration/script [all, default, none]. Requires ENABLE_DEBUG_DB=true
+HELP_UVM_VERSION             := Selects the UVM version to compile [1.2|1.1]
+HELP_ENABLE_DEBUG_DB         := Enables generation of debug database files for Verdi [true|false]
 HELP_DEFINES                 := Additional Verilog/SystemVerilog defines passed to vcs
 HELP_COMPILE_ARGS            := Additional arguments passed to the vcs compile command
-HELP_RUN_ARGS                := Additional runtime arguments passed to simv
 HELP_SIMV_NAME               := Name of the generated simulation executable
-HELP_JOB_NAME                := Name of the simulation job/output directory
-HELP_UVCS_FILELIST           := Optional UVC filelist passed to VCS. Empty by default
-HELP_DPI_FILE                := Optional DPI shared library passed to VCS. Empty by default
 HELP_ENABLE_CODE_COV_COMPILE := Enables code coverage collection during compilation [true|false]
 HELP_CODE_COV_TYPES_COMPILE  := Code coverage types during compilation [line+cond+fsm+branch+tgl+assert]
+HELP_UVCS_FILELIST           := Optional UVC filelist passed to VCS. Empty by default
+HELP_DPI_FILE                := Optional DPI shared library passed to VCS. Empty by default
+
+# Runtime
+HELP_TEST                    := Name of the UVM test to run
+HELP_VERBOSITY               := UVM verbosity level used during simulation
+HELP_SEED_MODE               := Random seed mode [auto|fixed]
+HELP_SEED                    := Simulation random seed (integer > 0). Used only when SEED_MODE=fixed
+HELP_ENABLE_UVM_RECORDING    := Enables UVM transaction and object recording [true|false]
 HELP_ENABLE_CODE_COV_RUN     := Enables code coverage collection during simulation [true|false]
 HELP_CODE_COV_TYPES_RUN      := Code coverage types during simulation [line+cond+fsm+branch+tgl+assert]
+HELP_DUMP_MODE               := Select waveform dump configuration/script [all, default, none]. Requires ENABLE_DEBUG_DB=true
+HELP_RUN_ARGS                := Additional runtime arguments passed to simv
+HELP_JOB_NAME                := Name of the simulation job/output directory
+
+HELP_ENABLE_SVA              := Enables SystemVerilog Assertions (SVA) support [true|false]
 
 SYNOPSYS_TOOLS := vcs urg verdi wv
 
@@ -499,29 +486,6 @@ check-tools: ## COMMON: Check required Synopsys tools
 	@printf "$(C_GRN)%s$(C_RST)\n" "All Synopsys tools are available"
 #_______________________________________________________________________________
 
-.PHONY: print-vars
-print-vars: ## COMMON: Print Makefile variables
-	$(call print_vars,Directory variables,$(DIR_VARS))
-	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
-	$(call print_vars,Test variables,$(TEST_RUN_VARS))
-	$(call print_vars,Filelist variables,$(FILELIST_VARS))
-	$(call print_vars,UVM variables,$(UVM_VARS))
-	$(call print_vars,Seed variables,$(SEED_VARS))
-	$(call print_vars,UCLI variables,$(UCLI_VARS))
-	$(call print_vars,Coverage variables,$(CODE_COV_VARS))
-	$(call print_vars,SVA variables,$(SVA_VARS))
-	$(call print_vars,Debug variables,$(DEBUG_VARS))
-	$(call print_vars,Control variables,$(CONTROL_VARS))
-	$(call print_vars,Compile-time variables,$(COMPILE_TIME_VARIABLES))
-	$(call print_vars,Simulation variables,$(SIMULATION_VARIABLES))
-	$(call print_vars,Mixed variables,$(MIXED_VARIABLES))
-	$(call print_var,VCS_FLAGS)
-	$(call print_var,SIMV_FLAGS)
-# 	$(call print_var,URG_FLAGS)
-# 	$(call print_var,VERDI_FLAGS)
-# 	$(call print_var,VERDI_COV_FLAGS)
-#_______________________________________________________________________________
-
 .PHONY: compile
 compile: ## COMMON: Runs VCS compilation
 	$(RUN_COMPILE)
@@ -581,7 +545,27 @@ vcd2fsdb: ## COMMON: Convert VCD to FSDB
 	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
 #_______________________________________________________________________________
 
-#@printf "%s\n" "$(MAKEFILE_LIST)"
+.PHONY: print-common
+print-common: ## COMMON: Print Makefile variables
+	$(call print_vars,Directory variables,$(DIR_VARS))
+	$(call print_vars,Workspace variables,$(WORKSPACE_VARS))
+	$(call print_vars,Test variables,$(TEST_RUN_VARS))
+	$(call print_vars,Filelist variables,$(FILELIST_VARS))
+	$(call print_vars,UVM variables,$(UVM_VARS))
+	$(call print_vars,Seed variables,$(SEED_VARS))
+	$(call print_vars,UCLI variables,$(UCLI_VARS))
+	$(call print_vars,Coverage variables,$(CODE_COV_VARS))
+	$(call print_vars,SVA variables,$(SVA_VARS))
+	$(call print_vars,Debug variables,$(DEBUG_VARS))
+	$(call print_vars,Control variables,$(CONTROL_VARS))
+	$(call print_vars,Compile-time variables,$(COMPILE_TIME_VARIABLES))
+	$(call print_vars,Simulation variables,$(SIMULATION_VARIABLES))
+	$(call print_vars,Mixed variables,$(MIXED_VARIABLES))
+	$(call print_var,VCS_FLAGS)
+	$(call print_var,SIMV_FLAGS)
+	$(call print_var,VERDI_FLAGS)
+#_______________________________________________________________________________
+
 .PHONY: help-common
 help-common: ## COMMON: Displays help message
 	@printf "%s\n" "================================================================================"
@@ -593,8 +577,6 @@ help-common: ## COMMON: Displays help message
 	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
 	@printf "%s\n" "----------------------------------- VARIABLES ----------------------------------"
 	$(call print_var_help,$(CONTROL_VARS))
-# 	@printf "%s\n" "--------------------------------- CURRENT VALUES -------------------------------"
-# 	$(call print_vars_help_values,$(CONTROL_VARS))
 	@printf "%s\n" "---------------------------------- COMPILE TIME --------------------------------"
 	$(call print_vars_help_values,$(COMPILE_TIME_VARIABLES))
 	@printf "%s\n" "------------------------------------ RUN TIME ----------------------------------"
