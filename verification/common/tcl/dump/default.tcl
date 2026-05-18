@@ -20,4 +20,4 @@
 source $::env(DUMP_LIB_TCL)
 
 # Call function
-dump_default
+dump_default "waves/novas.fsdb"

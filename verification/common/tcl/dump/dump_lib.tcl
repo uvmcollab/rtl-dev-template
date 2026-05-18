@@ -16,40 +16,33 @@
 ## [Revisions]      -
 ##=============================================================================
 
-proc dump_default {} {
-    # Dump signals to FSDB (RECOMMENDED)
-    puts {[TCL-CUSTOM]: Dumping dut signals to novas.fsdb}
-    dump -file novas.fsdb -type FSDB
-    dump -add tb.dut -depth 0 -fid FSDB0
+proc dump_default {{dump_name novas.fsdb} {dump_scope tb.dut}} {
+    puts "\[TCL-CUSTOM\]: Dumping $dump_scope signals to $dump_name"
+    dump -file $dump_name -type FSDB
+    dump -add $dump_scope -depth 0 -fid FSDB0
     run
     quit
 }
 
-
-proc dump_all {} {
-    # Dumps everything to FSDB from root including complex data type
-    puts {[TCL-CUSTOM]: Dumping all signals to novas.fsdb}
-    dump -file novas.fsdb -type FSDB
+proc dump_all {{dump_name novas.fsdb}} {
+    puts "\[TCL-CUSTOM\]: Dumping all signals to $dump_name"
+    dump -file $dump_name -type FSDB
     dump -add / -aggregates -fid FSDB0
     run
     quit
 }
 
-
-proc dump_top {} {
-    # Dump signals to FSDB from dut just ports
-    puts {[TCL-CUSTOM]: Dumping port signals to novas.fsdb}
-    dump -file novas.fsdb -type FSDB
+proc dump_top {{dump_name novas.fsdb}} {
+    puts "\[TCL-CUSTOM\]: Dumping port signals to $dump_name"
+    dump -file $dump_name -type FSDB
     dump -add tb.dut -depth 1 -ports -fid FSDB0
     run
     quit
 }
 
-
-proc dump_custom {} {
-    # Dump signals to FSDB specific signals
-    puts {[TCL-CUSTOM]: Dumping specific signals to novas.fsdb}
-    dump -file novas.fsdb -type FSDB
+proc dump_custom {{dump_name novas.fsdb}} {
+    puts "\[TCL-CUSTOM\]: Dumping specified signals to $dump_name"
+    dump -file $dump_name -type FSDB
     dump -add tb.dut.clk_i -fid FSDB0
     dump -add tb.dut.db_level_o -fid FSDB0
     dump -add tb.dut.db_tick_o -fid FSDB0
@@ -57,10 +50,8 @@ proc dump_custom {} {
     quit
 }
 
-
 proc dump_none {} {
-    # Run simulation without waveform dumping
-    puts {[TCL-CUSTOM]: Running without waveform dumping}
+    puts "\[TCL-CUSTOM\]: Running without wavedorm to dumping"
     run
     quit
 }
