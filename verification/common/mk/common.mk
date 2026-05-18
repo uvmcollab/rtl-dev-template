@@ -212,16 +212,18 @@ CODE_COV_VARS = \
 	$(COV_DIR_VARS) \
 	ENABLE_CODE_COV_COMPILE ENABLE_CODE_COV_RUN \
 	CODE_COV_TYPES_COMPILE CODE_COV_TYPES_RUN \
-	COV_DB_NAME BUILD_COV_DB COV_HIER_FILE COV_L\
+	COV_DB_NAME BUILD_COV_DB COV_HIER_FILE \
 	COV_FLAGS_VCS COV_FLAGS_SIMV
 
 # ------------------------------------ SVA -------------------------------------
 # Options: [true, false]
-ENABLE_SVA     ?= false
+ENABLE_SVA_COMPILE ?= false
+ENABLE_SVA_RUN     ?= $(ENABLE_SVA_COMPILE)
+
 SVA_FLAGS_VCS  ?=
 SVA_FLAGS_SIMV ?=
 
-SVA_VARS := ENABLE_SVA SVA_FLAGS_VCS SVA_FLAGS_SIMV
+SVA_VARS := ENABLE_SVA_COMPILE ENABLE_SVA_RUN SVA_FLAGS_VCS SVA_FLAGS_SIMV
 
 # ================================== CONTROL ===================================
 # Derived flags / logic
@@ -268,8 +270,12 @@ endif
 
 # ------------------------------------ SVA -------------------------------------
 # Options: [true, false]
-ifeq ($(ENABLE_SVA),true)
+ifeq ($(ENABLE_SVA_COMPILE),true)
 	SVA_FLAGS_VCS  += -assert enable_diag+enable_hier
+endif
+
+# Options: [true, false]
+ifeq ($(ENABLE_SVA_RUN),true)
 	SVA_FLAGS_SIMV += -assert summary+quiet1 \
 					-assert report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
 endif
@@ -314,18 +320,9 @@ SIMV_FLAGS = +UVM_TESTNAME=$(TEST) +UVM_VERBOSITY=$(VERBOSITY) \
 
 # ----------------------------------- VERDI ------------------------------------
 VERDI_FLAGS     ?= -nologo -q -ssf $(JOB_DIR)/novas.fsdb 
-#VERDI_COV_FLAGS ?= -nologo -q -cov -covdir $(COV_MERGE_DIR)/merged.vdb
 # VERDI_FLAGS    = -ssf $(RUN_DIR)/$(JOB_NAME)/novas.fsdb -dbdir simv.daidir -nologo -q
 
-
-# Add a new target and flags for the gui mode $(GUI_FLAGS)
-# ------------------------------------ URG -------------------------------------
-# URG_FLAGS = -full64 -dir $(SIMV_DIR)/$(COV_NAME) -format both \
-# 			-log $(LOGS_DIR)/$(CUR_DATE)_cov.log \
-# 			-report $(COV_REPORT_DIR) -dbname $(COV_MERGE_DIR)/merged.vdb -show tests
-
-
-TOOLS_FLAGS_VARS := VCS_FLAGS SIMV_FLAGS URG_FLAGS VERDI_FLAGS VERDI_COV_FLAGS
+TOOLS_FLAGS_VARS := VCS_FLAGS SIMV_FLAGS VERDI_FLAGS
 
 # ============================== VARIABLE GROUPS ===============================
 
@@ -348,6 +345,7 @@ COMPILE_TIME_VARIABLES := \
 	SIMV_NAME \
 	ENABLE_CODE_COV_COMPILE \
 	CODE_COV_TYPES_COMPILE \
+	ENABLE_SVA_COMPILE \
 	UVCS_FILELIST \
 	DPI_FILE
 
@@ -359,18 +357,14 @@ SIMULATION_VARIABLES := \
 	ENABLE_UVM_RECORDING \
 	ENABLE_CODE_COV_RUN \
 	CODE_COV_TYPES_RUN \
+	ENABLE_SVA_RUN \
 	DUMP_MODE \
 	RUN_ARGS \
 	JOB_NAME
 
-# SVA and Coverage requires recompilation to work properly
-MIXED_VARIABLES := \
-	ENABLE_SVA
-
 CONTROL_VARS := \
 	$(COMPILE_TIME_VARIABLES) \
-	$(SIMULATION_VARIABLES) \
-	$(MIXED_VARIABLES)
+	$(SIMULATION_VARIABLES)
 
 # ------------------------------- HELP MESSAGES --------------------------------
 
@@ -384,6 +378,7 @@ HELP_COMPILE_ARGS            := Additional arguments passed to the vcs compile c
 HELP_SIMV_NAME               := Name of the generated simulation executable
 HELP_ENABLE_CODE_COV_COMPILE := Enables code coverage collection during compilation [true|false]
 HELP_CODE_COV_TYPES_COMPILE  := Code coverage types during compilation [line+cond+fsm+branch+tgl+assert]
+HELP_ENABLE_SVA_COMPILE      := Enables SVA compilation support in VCS [true|false]
 HELP_UVCS_FILELIST           := Optional UVC filelist passed to VCS. Empty by default
 HELP_DPI_FILE                := Optional DPI shared library passed to VCS. Empty by default
 
@@ -395,6 +390,7 @@ HELP_SEED                    := Simulation random seed (integer > 0). Used only 
 HELP_ENABLE_UVM_RECORDING    := Enables UVM transaction and object recording [true|false]
 HELP_ENABLE_CODE_COV_RUN     := Enables code coverage collection during simulation [true|false]
 HELP_CODE_COV_TYPES_RUN      := Code coverage types during simulation [line+cond+fsm+branch+tgl+assert]
+HELP_ENABLE_SVA_RUN          := Enables SVA runtime reporting/control [true|false]
 HELP_DUMP_MODE               := Select waveform dump configuration/script [all, default, none]. Requires ENABLE_DEBUG_DB=true
 HELP_RUN_ARGS                := Additional runtime arguments passed to simv
 HELP_JOB_NAME                := Name of the simulation job/output directory
@@ -407,7 +403,7 @@ SYNOPSYS_TOOLS := vcs urg verdi wv
 
 # ------------------------------ COMPILE MANIFEST ------------------------------
 
-BUILD_MANIFEST_FILE ?= $(SIMV_DIR)/coverage-build.mk
+BUILD_MANIFEST_FILE ?= $(SIMV_DIR)/build_manifest.mk
 
 define WRITE_BUILD_MANIFEST
 	@printf "$(C_CYN)%s$(C_RST)\n" "Writing build manifest"
@@ -418,6 +414,8 @@ define WRITE_BUILD_MANIFEST
 		printf "BUILD_COV_DB=%s\n" "$(BUILD_COV_DB)"; \
 		printf "ENABLE_CODE_COV_COMPILE=%s\n" "$(ENABLE_CODE_COV_COMPILE)"; \
 		printf "CODE_COV_TYPES_COMPILE=%s\n" "$(CODE_COV_TYPES_COMPILE)"; \
+		printf "ENABLE_SVA_COMPILE=%s\n" "$(ENABLE_SVA_COMPILE)"; \
+		printf "BUILD_LOG=%s\n" "$(SIMV_DIR)/logs/$(CUR_DATE)_compile.log"; \
 	} > $(BUILD_MANIFEST_FILE)
 endef
 
@@ -431,7 +429,7 @@ endef
 
 # ---------------------------- SIMULATION MANIFEST -----------------------------
 
-RUN_MANIFEST_EXT ?= coverage.mk
+RUN_MANIFEST_EXT ?= run_manifest.mk
 
 define WRITE_RUN_MANIFEST
 	{ \
@@ -442,9 +440,10 @@ define WRITE_RUN_MANIFEST
 		printf "SIMV_DIR=%s\n" "$(SIMV_DIR)"; \
 		printf "RUN_COV_DB=%s\n" "$${RUN_COV_DB}"; \
 		printf "RUN_MANIFEST=%s\n" "$(JOB_DIR)/cov/$${TEST_ID}.$(RUN_MANIFEST_EXT)"; \
-		printf "BUILD_MANIFEST_FILE=%s\n" "$(SIMV_DIR)/coverage-build.mk"; \
+		printf "BUILD_MANIFEST_FILE=%s\n" "$(BUILD_MANIFEST_FILE)"; \
 		printf "ENABLE_CODE_COV_RUN=%s\n" "$(ENABLE_CODE_COV_RUN)"; \
 		printf "CODE_COV_TYPES_RUN=%s\n" "$(CODE_COV_TYPES_RUN)"; \
+		printf "ENABLE_SVA_RUN=%s\n" "$(ENABLE_SVA_RUN)"; \
 	} > $(JOB_DIR)/cov/$${TEST_ID}.$(RUN_MANIFEST_EXT);
 endef
 
@@ -504,22 +503,6 @@ verdi: ## COMMON: Opens Verdi GUI
 	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
 #_______________________________________________________________________________
 
-# .PHONY: cov
-# cov: ## COMMON: Create coverage report
-# 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
-# 		"Creating coverage report" "$(JOB_NAME)"
-# 	@mkdir -p $(COV_DIR)/report
-# 	cd $(RUN_DIR) && urg $(URG_FLAGS)
-#_______________________________________________________________________________
-
-# .PHONY: verdi-cov
-# verdi-cov: ## COMMON: Open coverage report in Verdi
-# 	@printf "$(C_CYN)%s: %s$(C_RST)\n" \
-# 		"Opening coverage report in Verdi" "$(JOB_NAME)"
-# 	@mkdir -p $(VERDI_DIR)
-# 	cd $(VERDI_DIR) && verdi $(VERDI_COV_FLAGS) &
-# #_______________________________________________________________________________
-
 .PHONY: clean
 clean: ## COMMON: Remove all simulation files
 	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
@@ -560,7 +543,6 @@ print-common: ## COMMON: Print Makefile variables
 	$(call print_vars,Control variables,$(CONTROL_VARS))
 	$(call print_vars,Compile-time variables,$(COMPILE_TIME_VARIABLES))
 	$(call print_vars,Simulation variables,$(SIMULATION_VARIABLES))
-	$(call print_vars,Mixed variables,$(MIXED_VARIABLES))
 	$(call print_var,VCS_FLAGS)
 	$(call print_var,SIMV_FLAGS)
 	$(call print_var,VERDI_FLAGS)
@@ -581,7 +563,5 @@ help-common: ## COMMON: Displays help message
 	$(call print_vars_help_values,$(COMPILE_TIME_VARIABLES))
 	@printf "%s\n" "------------------------------------ RUN TIME ----------------------------------"
 	$(call print_vars_help_values,$(SIMULATION_VARIABLES))
-	@printf "%s\n" "------------------------------------- MIXED ------------------------------------"
-	$(call print_vars_help_values,$(MIXED_VARIABLES))
 	@printf "%s\n" "================================================================================"
 #_______________________________________________________________________________

@@ -68,6 +68,7 @@ if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
         exit 1
     fi
 
+    # Check if manifest exists
     if [[ ! -f "$BUILD_MANIFEST_FILE" ]]; then
         printf '[FAIL] %s\n' "Build manifest does not exist: $BUILD_MANIFEST_FILE"
         exit 1
@@ -75,19 +76,21 @@ if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
 
     source "$BUILD_MANIFEST_FILE"
 
+    # Check if the value exists
     if [[ -z "${BUILD_COV_DB:-}" ]]; then
         printf '[FAIL] %s\n' "BUILD_COV_DB is empty"
         exit 1
     fi
 
+    # Check if the directory exists
     if [[ ! -d "$BUILD_COV_DB" ]]; then
         printf '[FAIL] %s\n' "BUILD_COV_DB does not exist: $BUILD_COV_DB"
         exit 1
     fi
 
     printf '[INFO] %s\n' "Merging run + build coverage"
-    eval urg -dir "\"$RUN_COV_DB\"" -dir "\"$BUILD_COV_DB\"" "$URG_COMMON_FLAGS"
+    urg -dir "$RUN_COV_DB" -dir "$BUILD_COV_DB" "$URG_COMMON_FLAGS"
 else
     printf '[INFO] %s\n' "Using run coverage only"
-    eval urg -dir "\"$RUN_COV_DB\"" "$URG_COMMON_FLAGS"
+    urg -dir "$RUN_COV_DB" "$URG_COMMON_FLAGS"
 fi

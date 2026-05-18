@@ -13,8 +13,8 @@
 
 # ============================= COVERAGE MANIFESTS =============================
 
-BUILD_MANIFEST_NAME ?= coverage-build.mk
-RUN_MANIFEST_EXT    ?= coverage.mk
+BUILD_MANIFEST_NAME ?= build_manifest.mk
+RUN_MANIFEST_EXT    ?= run_manifest.mk
 
 # File matching patterns (globs)
 RUN_MANIFEST_GLOB   ?= *.$(RUN_MANIFEST_EXT)

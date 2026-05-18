@@ -31,11 +31,13 @@ COMPILE_ARGS         ?=
 #-cm_hier $(ROOT_DIR)/cov.cfg
 
 # Coverage
-ENABLE_CODE_COV_COMPILE ?= false
+ENABLE_CODE_COV_COMPILE ?= true
 CODE_COV_TYPES_COMPILE ?= line+cond+tgl
 
-ENABLE_CODE_COV_RUN ?= false
+ENABLE_CODE_COV_RUN ?= true
 CODE_COV_TYPES_RUN ?= line+cond+tgl
+
+# Assertions
 
 RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,100
 # RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,100 \
