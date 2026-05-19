@@ -443,7 +443,7 @@ define WRITE_RUN_MANIFEST
 		printf "ENABLE_CODE_COV_RUN=%s\n" "$(ENABLE_CODE_COV_RUN)"; \
 		printf "CODE_COV_TYPES_RUN=%s\n" "$(CODE_COV_TYPES_RUN)"; \
 		printf "ENABLE_SVA_RUN=%s\n" "$(ENABLE_SVA_RUN)"; \
-		printf "RUN_FILE=%s\n" "$(JOB_DIR)/logs/$${TEST_ID}_run.log"; \
+		printf "RUN_LOG=%s\n" "$(JOB_DIR)/logs/$${TEST_ID}_run.log"; \
 		printf "SIM_STATUS=%s\n" "$${SIM_STATUS}"; \
 	} > $(JOB_DIR)/manifests/$${TEST_ID}_$(RUN_MANIFEST_EXT);
 endef

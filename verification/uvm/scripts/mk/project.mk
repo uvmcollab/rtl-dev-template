@@ -30,7 +30,7 @@ ENABLE_DEBUG_DB         ?= false
 # DEFINES                 ?=
 # COMPILE_ARGS            ?=
 # SIMV_NAME               ?= simv
-ENABLE_CODE_COV_COMPILE ?= false
+ENABLE_CODE_COV_COMPILE ?= true
 CODE_COV_TYPES_COMPILE  ?= line+cond+tgl
 ENABLE_SVA_COMPILE      ?= false
 UVCS_FILELIST           ?= -F $(TB_DIR)/uvcs.f
@@ -43,12 +43,12 @@ DPI_FILE                ?= $(COMMON_DPI_DIR)/lib/libdpi.so
 # SEED_MODE                 ?= fixed
 # SEED                      ?= 5081996
 ENABLE_UVM_RECORDING      ?= false
-ENABLE_CODE_COV_RUN       ?= false
+ENABLE_CODE_COV_RUN       ?= true
 CODE_COV_TYPES_RUN        ?= line+cond+tgl
 ENABLE_SVA_RUN            ?= false
 DUMP_MODE                 ?= none
 # JOB_NAME                  ?= debug
-RUN_ARGS                  ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,600
+RUN_ARGS                  ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,2000
 
 # 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_asserted,120 \
 # 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_deasserted,120
