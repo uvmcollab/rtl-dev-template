@@ -276,9 +276,9 @@ endif
 
 # Options: [true, false]
 ifeq ($(ENABLE_SVA_RUN),true)
-	SVA_FLAGS_SIMV += -assert summary+quiet1 \
-					-assert report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
+	SVA_FLAGS_SIMV += -assert summary+quiet1
 endif
+#-assert report=$(LOGS_DIR)/$(CUR_DATE)_sva.log
 
 # ================================ TOOLS SETUP =================================
 
@@ -359,8 +359,8 @@ SIMULATION_VARIABLES := \
 	CODE_COV_TYPES_RUN \
 	ENABLE_SVA_RUN \
 	DUMP_MODE \
-	RUN_ARGS \
-	JOB_NAME
+	JOB_NAME \
+	RUN_ARGS
 
 CONTROL_VARS := \
 	$(COMPILE_TIME_VARIABLES) \
@@ -395,15 +395,14 @@ HELP_DUMP_MODE               := Select waveform dump configuration/script [all, 
 HELP_RUN_ARGS                := Additional runtime arguments passed to simv
 HELP_JOB_NAME                := Name of the simulation job/output directory
 
-HELP_ENABLE_SVA              := Enables SystemVerilog Assertions (SVA) support [true|false]
-
 SYNOPSYS_TOOLS := vcs urg verdi wv
 
 # =================================== MACROS ===================================
 
 # ------------------------------ COMPILE MANIFEST ------------------------------
 
-BUILD_MANIFEST_FILE ?= $(SIMV_DIR)/build_manifest.mk
+BUILD_MANIFEST_EXT  ?= build_manifest.mk
+BUILD_MANIFEST_FILE ?= $(SIMV_DIR)/$(BUILD_MANIFEST_EXT)
 
 define WRITE_BUILD_MANIFEST
 	@printf "$(C_CYN)%s$(C_RST)\n" "Writing build manifest"
@@ -439,19 +438,21 @@ define WRITE_RUN_MANIFEST
 		printf "SIMV_NAME=%s\n" "$(SIMV_NAME)"; \
 		printf "SIMV_DIR=%s\n" "$(SIMV_DIR)"; \
 		printf "RUN_COV_DB=%s\n" "$${RUN_COV_DB}"; \
-		printf "RUN_MANIFEST=%s\n" "$(JOB_DIR)/cov/$${TEST_ID}.$(RUN_MANIFEST_EXT)"; \
+		printf "RUN_MANIFEST=%s\n" "$(JOB_DIR)/manifests/$${TEST_ID}_$(RUN_MANIFEST_EXT)"; \
 		printf "BUILD_MANIFEST_FILE=%s\n" "$(BUILD_MANIFEST_FILE)"; \
 		printf "ENABLE_CODE_COV_RUN=%s\n" "$(ENABLE_CODE_COV_RUN)"; \
 		printf "CODE_COV_TYPES_RUN=%s\n" "$(CODE_COV_TYPES_RUN)"; \
 		printf "ENABLE_SVA_RUN=%s\n" "$(ENABLE_SVA_RUN)"; \
-	} > $(JOB_DIR)/cov/$${TEST_ID}.$(RUN_MANIFEST_EXT);
+		printf "RUN_FILE=%s\n" "$(JOB_DIR)/logs/$${TEST_ID}_run.log"; \
+		printf "SIM_STATUS=%s\n" "$${SIM_STATUS}"; \
+	} > $(JOB_DIR)/manifests/$${TEST_ID}_$(RUN_MANIFEST_EXT);
 endef
 
 # --------------------------------- SIMULATION ---------------------------------
 define RUN_SIM
 	@printf "$(C_CYN)%s$(C_RST)\n" \
 		"Running simulation SEED=$(SEED_MODE) SEED=$(SEED)"
-	@mkdir -p $(JOB_DIR) $(LOGS_DIR) $(JOB_DIR)/logs $(JOB_DIR)/cov
+	@mkdir -p $(JOB_DIR) $(LOGS_DIR) $(JOB_DIR)/logs $(JOB_DIR)/cov $(JOB_DIR)/manifests
 	@TEST_ID="$(CUR_DATE)_$(TEST)_$$$$"; \
 	LOG_FILE="-l $(JOB_DIR)/logs/$${TEST_ID}_run.log"; \
 	RUN_COV_DB="$(JOB_DIR)/cov/$${TEST_ID}.vdb"; \
@@ -459,7 +460,9 @@ define RUN_SIM
 	cd $(JOB_DIR) && \
 	$(SIMV_DIR)/$(SIMV_NAME) $(SIMV_FLAGS) \
 		$${COV_TEST_FLAGS} $${LOG_FILE}; \
-	$(WRITE_RUN_MANIFEST)
+	SIM_STATUS=$$?; \
+	$(WRITE_RUN_MANIFEST) \
+	exit $$SIM_STATUS
 endef
 
 # ================================  TARGETS  ==================================
@@ -503,6 +506,18 @@ verdi: ## COMMON: Opens Verdi GUI
 	cd $(VERDI_DIR) && verdi $(VERDI_FLAGS) &
 #_______________________________________________________________________________
 
+.PHONY: fsdb2vcd
+fsdb2vcd: ## COMMON: Convert FSDB to VCD
+	@printf "$(C_CYN)%s$(C_RST)\n" "Convert FSDB to VCD"
+	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
+#_______________________________________________________________________________
+
+.PHONY: vcd2fsdb
+vcd2fsdb: ## COMMON: Convert VCD to FSDB
+	@printf "$(C_CYN)%s$(C_RST)\n" "Convert VCD to FSDB"
+	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
+#_______________________________________________________________________________
+
 .PHONY: clean
 clean: ## COMMON: Remove all simulation files
 	@printf "$(C_CYN)%s$(C_RST)\n" "Removing all generated files"
@@ -516,16 +531,16 @@ clean-logs: ## COMMON: Remove compilation and simulation logs
 	@find $(RUN_DIR)   -name "*_run.log"     -delete
 #_______________________________________________________________________________
 
-.PHONY: fsdb2vcd
-fsdb2vcd: ## COMMON: Convert FSDB to VCD
-	@printf "$(C_CYN)%s$(C_RST)\n" "Convert FSDB to VCD"
-	cd $(JOB_DIR) && fsdb2vcd novas.fsdb -o novas.vcd -sv
+.PHONY: clean-runs
+clean-runs: ## COMMON: Remove runs files
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing runs files"
+	@rm -rf $(RUN_DIR)
 #_______________________________________________________________________________
 
-.PHONY: vcd2fsdb
-vcd2fsdb: ## COMMON: Convert VCD to FSDB
-	@printf "$(C_CYN)%s$(C_RST)\n" "Convert VCD to FSDB"
-	cd $(JOB_DIR) && vcd2fsdb novas.vcd -o novas.fsdb -sv
+.PHONY: clean-builds
+clean-builds: ## COMMON: Remove builds files
+	@printf "$(C_CYN)%s$(C_RST)\n" "Removing builds files"
+	@rm -rf $(BUILD_DIR)
 #_______________________________________________________________________________
 
 .PHONY: print-common

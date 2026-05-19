@@ -21,26 +21,35 @@ COMMON_MK_DIR := $(GIT_DIR)/verification/common/mk
 # =============================== CONFIGURATION ================================
 # Project-specific defaults
 
-ENABLE_UVM           ?= true
-ENABLE_DEBUG_DB      ?= false
-ENABLE_UVM_RECORDING ?= false
-DUMP_MODE            ?= none
-UVCS_FILELIST        ?= -F $(TB_DIR)/uvcs.f
-DPI_FILE             ?= $(COMMON_DPI_DIR)/lib/libdpi.so
-COMPILE_ARGS         ?=
-#-cm_hier $(ROOT_DIR)/cov.cfg
+# -------------------------------- COMPILE-TIME --------------------------------
 
-# Coverage
-ENABLE_CODE_COV_COMPILE ?= true
-CODE_COV_TYPES_COMPILE ?= line+cond+tgl
+# TIMESCALE               ?= 1ps/100fs
+ENABLE_UVM              ?= true
+# UVM_VERSION             ?= 1.2
+ENABLE_DEBUG_DB         ?= false
+# DEFINES                 ?=
+# COMPILE_ARGS            ?=
+# SIMV_NAME               ?= simv
+ENABLE_CODE_COV_COMPILE ?= false
+CODE_COV_TYPES_COMPILE  ?= line+cond+tgl
+ENABLE_SVA_COMPILE      ?= false
+UVCS_FILELIST           ?= -F $(TB_DIR)/uvcs.f
+DPI_FILE                ?= $(COMMON_DPI_DIR)/lib/libdpi.so
 
-ENABLE_CODE_COV_RUN ?= true
-CODE_COV_TYPES_RUN ?= line+cond+tgl
+# ---------------------------------- RUN-TIME ----------------------------------
 
-# Assertions
+# TEST                      ?= top_test
+# VERBOSITY                 ?= UVM_MEDIUM
+# SEED_MODE                 ?= fixed
+# SEED                      ?= 5081996
+ENABLE_UVM_RECORDING      ?= false
+ENABLE_CODE_COV_RUN       ?= false
+CODE_COV_TYPES_RUN        ?= line+cond+tgl
+ENABLE_SVA_RUN            ?= false
+DUMP_MODE                 ?= none
+# JOB_NAME                  ?= debug
+RUN_ARGS                  ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,600
 
-RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,100
-# RUN_ARGS ?= +uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_iter,100 \
 # 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_asserted,120 \
 # 			+uvm_set_config_int=uvm_test_top.m_env.vsqr,m_cli_cycles_deasserted,120
 
