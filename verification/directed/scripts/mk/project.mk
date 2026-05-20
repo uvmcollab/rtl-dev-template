@@ -21,10 +21,34 @@ COMMON_MK_DIR := $(GIT_DIR)/verification/common/mk
 # =============================== CONFIGURATION ================================
 # Project-specific defaults
 
-ENABLE_UVM ?= false
-# DEFINES    ?= +define+ERROR1_VERSION
-# ENABLE_SVA ?= true
-DPI_FILE   ?= $(DPI_DIR)/lib/libdpi.so
+# -------------------------------- COMPILE-TIME --------------------------------
+
+# TIMESCALE               ?= 1ps/100fs
+# ENABLE_UVM              ?= false
+# UVM_VERSION             ?= 1.2
+ENABLE_DEBUG_DB         ?= true
+DEFINES                 ?= +define+ERROR1_VERSION
+# COMPILE_ARGS            ?=
+SIMV_NAME               ?= simv2
+ENABLE_CODE_COV_COMPILE ?= true
+CODE_COV_TYPES_COMPILE  ?= line+cond+tgl
+ENABLE_SVA_COMPILE      ?= true
+UVCS_FILELIST           ?=
+DPI_FILE                ?= $(COMMON_DPI_DIR)/lib/libdpi.so
+
+# ---------------------------------- RUN-TIME ----------------------------------
+
+# TEST                      ?= top_test
+# VERBOSITY                 ?= UVM_MEDIUM
+# SEED_MODE                 ?= fixed
+# SEED                      ?= 5081996
+ENABLE_UVM_RECORDING      ?= false
+ENABLE_CODE_COV_RUN       ?= true
+CODE_COV_TYPES_RUN        ?= line+cond+tgl
+ENABLE_SVA_RUN            ?= true
+DUMP_MODE                 ?= default
+JOB_NAME                  ?= miguel_test
+RUN_ARGS                  ?= +iterations=100
 
 # ================================== INCLUDES ==================================
 
@@ -34,8 +58,11 @@ include $(COMMON_MK_DIR)/common.mk
 # DPI
 -include $(COMMON_MK_DIR)/dpi.mk
 
+# Coverage
+-include $(COMMON_MK_DIR)/cov.mk
+
 # Regression Manager
--include $(MK_DIR)/regression.mk
+# -include $(MK_DIR)/regression.mk
 
 # ================================= HELP MENU ==================================
 
