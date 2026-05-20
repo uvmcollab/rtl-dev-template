@@ -127,7 +127,9 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
     if (sw != sw_state) begin
       sync_counter = 0;
     end else begin
-      sync_counter++;
+      if (sync_counter <= 2) begin
+        sync_counter++;
+      end
     end
     
     // After latency count normally
@@ -135,7 +137,7 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
       cycle_counter = 0;
       value_to_load = sw;
     end else begin
-      if (cycle_counter != 99) begin
+      if (cycle_counter < 99) begin
         cycle_counter++;
       end
     end
