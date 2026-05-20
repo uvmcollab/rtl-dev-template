@@ -83,6 +83,9 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
     reference_trans = debouncer_ref(received_trans.m_rst_i, received_trans.m_sw_i);
   end
   
+  // Sample functional coverage
+  cg_cycle_counter.sample();
+
   // Compare received vs reference model
   is_equal = received_trans.compare(reference_trans);
 
@@ -114,6 +117,10 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_cpp_ref(bit rst, 
   debouncer_step(rst, sw, prediction.m_db_tick_o, prediction.m_db_level_o, prediction.m_cycle);
   prediction.m_rst_i = rst;
   prediction.m_sw_i = sw;
+
+  // Save cycle counter
+  cycle_counter = prediction.m_cycle;
+
   return prediction;
 endfunction: debouncer_cpp_ref
 
@@ -177,9 +184,6 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
   prediction.m_db_tick_o = tick_state;
   prediction.m_cycle = cycle_counter;
   
-  // Sample functional coverage
-  cg_cycle_counter.sample();
-
   return prediction;
 
 endfunction : debouncer_ref
