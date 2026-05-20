@@ -1,6 +1,16 @@
 `ifndef TOP_SCOREBOARD_SV
 `define TOP_SCOREBOARD_SV
 
+// =================== DPI FUNCTIONS ==================== //
+
+import "DPI-C" function void debouncer_step(
+  input  bit rst,
+  input  bit sw,
+  output bit tick_state,
+  output bit level_state,
+  output int unsigned cycle_counter
+);
+
 class top_scoreboard extends uvm_scoreboard;
 
   `uvm_component_utils(top_scoreboard)
@@ -8,8 +18,12 @@ class top_scoreboard extends uvm_scoreboard;
   `uvm_analysis_imp_decl(_observed)
   uvm_analysis_imp_observed #(debouncer_uvc_sequence_item, top_scoreboard) observed_imp_export;
 
+  // Statistics
   int m_num_passed;
   int m_num_failed;
+
+  // Flag indicating whether the reference model is a C++ model
+  bit is_cpp_model = 1;
 
   // Reference model variables
   int unsigned cycle_counter = 0;
@@ -18,9 +32,6 @@ class top_scoreboard extends uvm_scoreboard;
   bit level_state = 0;
   bit tick_state = 0;
   bit value_to_load;
-  
-  int unsigned debug_counter = 0;
-
 
   extern function new(string name, uvm_component parent);
 
@@ -31,6 +42,7 @@ class top_scoreboard extends uvm_scoreboard;
 
   // Reference model
   extern function debouncer_uvc_sequence_item debouncer_ref(bit rst, bit sw);
+  extern function debouncer_uvc_sequence_item debouncer_cpp_ref(bit rst, bit sw);
 
   covergroup cg_cycle_counter;
   option.per_instance = 1;
@@ -64,8 +76,12 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   received_trans = debouncer_uvc_sequence_item::type_id::create("received_trans");
   received_trans.copy(t);
 
-  // Reference model
-  reference_trans = debouncer_ref(received_trans.m_rst_i, received_trans.m_sw_i);
+  // Select reference model
+  if (is_cpp_model) begin
+    reference_trans = debouncer_cpp_ref(received_trans.m_rst_i, received_trans.m_sw_i);
+  end else begin
+    reference_trans = debouncer_ref(received_trans.m_rst_i, received_trans.m_sw_i);
+  end
   
   // Compare received vs reference model
   is_equal = received_trans.compare(reference_trans);
@@ -91,6 +107,15 @@ function void top_scoreboard::write_observed(debouncer_uvc_sequence_item t);
   
 endfunction : write_observed
 
+
+function debouncer_uvc_sequence_item top_scoreboard::debouncer_cpp_ref(bit rst, bit sw);
+  debouncer_uvc_sequence_item prediction;
+  prediction = debouncer_uvc_sequence_item::type_id::create("prediction");
+  debouncer_step(rst, sw, prediction.m_db_tick_o, prediction.m_db_level_o, prediction.m_cycle);
+  prediction.m_rst_i = rst;
+  prediction.m_sw_i = sw;
+  return prediction;
+endfunction: debouncer_cpp_ref
 
 // Spec model:
 // 1. If sw remains unchanged for CounterMax cycles, counting cycles 0..CounterMax-1,
@@ -144,8 +169,6 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
 
     // Update state
     sw_state = sw;
-    // Sample functional coverage
-    cg_cycle_counter.sample();
   end
 
   prediction.m_rst_i = rst;
@@ -154,6 +177,9 @@ function debouncer_uvc_sequence_item top_scoreboard::debouncer_ref(bit rst, bit 
   prediction.m_db_tick_o = tick_state;
   prediction.m_cycle = cycle_counter;
   
+  // Sample functional coverage
+  cg_cycle_counter.sample();
+
   return prediction;
 
 endfunction : debouncer_ref

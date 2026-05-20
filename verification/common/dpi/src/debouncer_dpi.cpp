@@ -25,7 +25,7 @@ extern "C" void debouncer_step(
 ) {
     
     g_dut.step(static_cast<bool>(rst), static_cast<bool>(sw));
-    g_dut.print_state(" Debug C++ ");
+    // g_dut.print_state(" Debug C++ ");
 
     *tick_state  = static_cast<svBit>(g_dut.get_tick_state());
     *level_state = static_cast<svBit>(g_dut.get_level_state());
