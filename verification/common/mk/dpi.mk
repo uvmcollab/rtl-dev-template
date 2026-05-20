@@ -34,9 +34,10 @@ DPI_LIB_NAME ?= libdpi.so
 
 # Output executable
 TARGET := $(DPI_BIN_DIR)/app
+DPI_WRAPPER = debouncer_dpi.cpp
 
 # Files
-SRCS := $(shell find $(DPI_SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "hack_dpi.cpp")
+SRCS := $(shell find $(DPI_SRC_DIR) \( -name "*.cpp" -o -name "*.cc" \) ! -name "$(DPI_WRAPPER)")
 OBJS := $(patsubst $(DPI_SRC_DIR)/%.cpp, $(DPI_OBJ_DIR)/%.o, $(SRCS))
 OBJS := $(patsubst $(DPI_SRC_DIR)/%.cc, $(DPI_OBJ_DIR)/%.o, $(OBJS))
 
@@ -70,7 +71,7 @@ build: $(TARGET) ## DPI: Build standalone DPI application
 .PHONY: run
 run: ## DPI: Run standalone DPI application
 	@printf "$(C_CYN)%s$(C_RST)\n" "Running $(TARGET)"
-	./$(TARGET)
+	$(TARGET)
 #______________________________________________________________________________
 
 .PHONY: build-dpi
@@ -79,7 +80,7 @@ build-dpi: ## DPI: Build DPI shared library for VCS
 	@mkdir -p $(DPI_LIB_DIR)
 	$(CXX) -fPIC -shared -std=c++17 -o $(DPI_LIB_DIR)/$(DPI_LIB_NAME) \
 	-I ${VCS_HOME}/include -I $(DPI_INC_DIR) \
-	$(DPI_SRC_DIR)/dpi.cpp
+	$(DPI_SRC_DIR)/$(DPI_WRAPPER)
 #______________________________________________________________________________
 
 .PHONY: clean-dpi

@@ -117,5 +117,4 @@ module test (
 
   endtask : check_db_tick
 
-
 endmodule : test
