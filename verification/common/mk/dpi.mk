@@ -80,6 +80,7 @@ build-dpi: ## DPI: Build DPI shared library for VCS
 	@mkdir -p $(DPI_LIB_DIR)
 	$(CXX) -fPIC -shared -std=c++17 -o $(DPI_LIB_DIR)/$(DPI_LIB_NAME) \
 	-I ${VCS_HOME}/include -I $(DPI_INC_DIR) \
+	$(DPI_SRC_DIR)/debouncer.cpp \
 	$(DPI_SRC_DIR)/$(DPI_WRAPPER)
 #______________________________________________________________________________
 
