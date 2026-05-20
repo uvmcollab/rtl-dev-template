@@ -10,8 +10,31 @@
 ##                  using the -ucli -do dump.tcl flag
 ##
 ##                  For more information refer to:
-##                    Unified Command Line Interface (UCLI) User Guide W-2024.09
-##                    dump - pag. 106
+##                      Unified Command Line Interface (UCLI) User Guide W-2024.09
+##                      dump - pag. 106
+##
+##                  The default dump is intentionally lightweight:
+##                      dump -add <scope> -depth 0 -fid FSDB0
+##                  If some objects are missing from the waveform, add -fsdb_opt manually:
+##                      +sva         Dumps assertions
+##                      +mda         Dumps memories and multidimensional arrays
+##                      +packedmda   Dumps packed multidimensional arrays
+##                      +struct      Dumps structs
+##                      +parameter   Dumps parameters
+##                      +all         Dumps memories, MDA, structs, unions, power, and packed structs
+##                  Examples:
+##                      dump -add tb.dut -depth 0 fid FSDB0 -fsdb_opt +mda+packedmda+struct
+##                      dump -add tb.dut -depth 0 fid FSDB0 -fsdb_opt +sva
+##                      dump -add tb.dut -depth 0 fid FSDB0 -fsdb_opt +all
+##
+##                  The -aggregates option can also be used with dump -add:
+##                      dump -add / -aggregates -fid FSDB0
+##                  It enables dumping of complex data stuctures such as VHDL records,
+##                  arrays of records, and Verilog multidimensional arrays.
+##
+##                  Recommended usage:
+##                      Use +sva only when debugging assertions
+##                      Use +all or -aggregates only for heavy debugging
 ## [Status]         stable
 ## [Revisions]      -
 ##=============================================================================
@@ -35,7 +58,7 @@ proc dump_all {{dump_name novas.fsdb}} {
 proc dump_top {{dump_name novas.fsdb}} {
     puts "\[TCL-CUSTOM\]: Dumping port signals to $dump_name"
     dump -file $dump_name -type FSDB
-    dump -add tb.dut -depth 1 -ports -fid FSDB0
+    dump -add tb.dut -depth 1 -ports -fid FSDB0 -aggregates
     run
     quit
 }
