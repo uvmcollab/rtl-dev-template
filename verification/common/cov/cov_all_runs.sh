@@ -188,4 +188,7 @@ done
 printf "[INFO] Coverage DBs to merge:\n"
 printf "  %s\n" "${MERGE_COV_DBS[@]}"
 
-urg "${URG_DIR_ARGS[@]}" "$URG_COMMON_FLAGS"
+# Convert Make-provided string into an array
+read -r -a URG_FLAGS <<< "$URG_COMMON_FLAGS"
+
+urg "${URG_DIR_ARGS[@]}" "${URG_FLAGS[@]}"
