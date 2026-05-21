@@ -10,7 +10,7 @@ cp $HOME/snps_scripts/setup_synopsys_eda.sh verification/common/setup
 
 ```bash
 source verification/uvm/scripts/setup/setup_uvm.sh
-source verification/directed/scripts/setup/setup_uvc.sh
+source verification/directed/scripts/setup/setup_uvm.sh
 ```
 
 > Remember: this should be run JUST ONCE
