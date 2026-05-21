@@ -80,6 +80,9 @@ check_required_dir "RUN_COV_DB" "${RUN_COV_DB:-}"
 
 # --------------------------------- MAIN LOGIC ---------------------------------
 
+# Convert Make-provided string into an array
+read -r -a URG_FLAGS <<< "$URG_COMMON_FLAGS"
+
 # Check if code coverage was enabled at run time
 if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
 
@@ -94,9 +97,9 @@ if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
 
     # Merge both databases
     printf '[INFO] %s\n' "Merging run + build coverage"
-    urg -dir "$RUN_COV_DB" -dir "$BUILD_COV_DB" "$URG_COMMON_FLAGS"
+    urg -dir "$RUN_COV_DB" -dir "$BUILD_COV_DB" "${URG_FLAGS[@]}"
 else
     # Merge just run coverage
     printf '[INFO] %s\n' "Merging run coverage only"
-    urg -dir "$RUN_COV_DB" "$URG_COMMON_FLAGS"
+    urg -dir "$RUN_COV_DB" "${URG_FLAGS[@]}"
 fi
