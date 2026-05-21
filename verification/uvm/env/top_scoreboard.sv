@@ -23,7 +23,7 @@ class top_scoreboard extends uvm_scoreboard;
   int m_num_failed;
 
   // Flag indicating whether the reference model is a C++ model
-  bit is_cpp_model = 1;
+  bit is_cpp_model = 0;
 
   // Reference model variables
   int unsigned cycle_counter = 0;
@@ -45,10 +45,20 @@ class top_scoreboard extends uvm_scoreboard;
   extern function debouncer_uvc_sequence_item debouncer_cpp_ref(bit rst, bit sw);
 
   covergroup cg_cycle_counter;
-  option.per_instance = 1;
-    coverpoint cycle_counter {
+    option.per_instance = 1;
+
+    cp_cycle: coverpoint cycle_counter {
       bins cycle_ranges[20] = {[0:99]};
     }
+
+    cp_level: coverpoint level_state {
+      bins level_bin = {[0:1]};
+    }
+
+    cp_tick: coverpoint tick_state {
+      bins tick_bin = {[0:1]};
+    }
+
   endgroup
 
 endclass : top_scoreboard
