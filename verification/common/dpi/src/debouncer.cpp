@@ -5,82 +5,106 @@
 // [Language]     C++
 // [Created]      Dec 2025
 // [Modified]     -
-// [Description]  DPI (Direct Programming Interface) model
-// [Notes]        
-//                reset -> clear state
-//                input change -> model sync latency
-//                stable input -> restart debounce counter
-//                counter reaches max_count - 1 -> update debounced level
-//                0 -> 1 debounced transition -> generate one-cycle tick
+// [Description]  Cycle-accurate C++ reference model for debouncer.sv
+// [Notes]        Mirrors ff1/ff2/cnt/ff3/ff4 RTL state updates
 // [Status]       stable
 // [Revisions]    -
 //==============================================================================
 
 #include "debouncer.h"
 
-Debouncer::Debouncer(uint32_t max_count)
-  : max_count(max_count)
-{
+#include <stdlib.h>
+
+namespace {
+
+uint32_t compute_counter_max(uint32_t clk_freq_hz, uint32_t stable_time_us) {
+  const uint64_t product = static_cast<uint64_t>(clk_freq_hz) * stable_time_us;
+  const uint32_t counter_max = static_cast<uint32_t>(product / 1000000ULL);
+
+  if (counter_max == 0) {
+    fprintf(stderr, "[ERROR] CounterMax must be greater than zero\n");
+    abort();
+  }
+
+  return counter_max;
 }
+
+}  // namespace
+
+
+Debouncer::Debouncer() = default;
+
+
+Debouncer::Debouncer(uint32_t counter_max) {
+  configure_counter_max(counter_max);
+}
+
+
+void Debouncer::configure(uint32_t clk_freq_hz, uint32_t stable_time_us) {
+  configure_counter_max(compute_counter_max(clk_freq_hz, stable_time_us));
+}
+
+
+void Debouncer::configure_counter_max(uint32_t counter_max) {
+  if (counter_max == 0) {
+    fprintf(stderr, "[ERROR] CounterMax must be greater than zero\n");
+    abort();
+  }
+
+  counter_max_reg = counter_max;
+  reset();
+}
+
+
+void Debouncer::reset() {
+  ff1_reg = false;
+  ff2_reg = false;
+  ff3_reg = false;
+  ff4_reg = false;
+  cnt_reg = 0;
+}
+
 
 void Debouncer::step(bool rst, bool sw) {
-
   if (rst) {
-    cycle_counter = 0;
-    sync_counter = 0;
-
-    sw_state = 0;
-    level_state = 0;
-    tick_state = 0;
-    
-    value_to_load = 0;
-  } else {
-
-    // Default value for tick
-    tick_state = 0;
-
-    // Check debouncer condition
-    if (cycle_counter == max_count - 1) {
-      if (level_state == 0 && value_to_load == 1) {
-        tick_state = 1;
-      }
-      level_state = value_to_load;
-    }
-
-    // Check for input changes and model a 2-cycle input latency.
-    // The first sample is the cycle where the change is detected.
-    // If the value is still stable on the next cycle, sync_counter becomes 1,
-    // which represents the second stable sample.
-    if (sw != sw_state) {
-      sync_counter = 0;
-    } else {
-      if (sync_counter <= 2) {
-        sync_counter++;
-      }
-    }
-      
-    // After the second stable sample, restart the debounce counter
-    // and capture the value that will be loaded after the stable time.
-    if (sync_counter == 1) {
-      cycle_counter = 0;
-      value_to_load = sw;
-    } else {
-     if (cycle_counter < max_count - 1) {
-       cycle_counter++;
-     } 
-    }
-    
-    // Update state
-    sw_state = sw;
+    reset();
+    return;
   }
+
+  const bool old_ff1 = ff1_reg;
+  const bool old_ff2 = ff2_reg;
+  const bool old_ff3 = ff3_reg;
+  const uint32_t old_cnt = cnt_reg;
+
+  const bool clear_cnt = old_ff1 ^ old_ff2;
+  const bool ena_cnt = (old_cnt == (counter_max_reg - 1));
+
+  ff1_reg = sw;
+  ff2_reg = old_ff1;
+
+  if (clear_cnt) {
+    cnt_reg = 0;
+  } else if (!ena_cnt) {
+    cnt_reg = old_cnt + 1;
+  } else {
+    cnt_reg = old_cnt;
+  }
+
+  if (ena_cnt) {
+    ff3_reg = old_ff2;
+  }
+
+  ff4_reg = old_ff3;
 }
 
 
-void Debouncer::print_state(std::string const& msg) {
-  std::cout << "\n================" << msg << "==============\n";
-  printf("Sync counter:     0d%04d\n", sync_counter);
-  printf("Cycle counter:    0d%04d\n", cycle_counter);
-  printf("Level state:      0d%04d\n", level_state);
-  printf("Tick state:       0d%04d\n", tick_state);
-  printf("SW state:         0d%04d\n", sw_state);
+void Debouncer::print_state(const char* msg) const {
+  printf("\n================ %s ================\n", msg);
+  printf("CounterMax:       %u\n", counter_max_reg);
+  printf("Counter:          %u\n", cnt_reg);
+  printf("ff1:              %u\n", static_cast<unsigned>(ff1_reg));
+  printf("ff2:              %u\n", static_cast<unsigned>(ff2_reg));
+  printf("ff3/db_level_o:   %u\n", static_cast<unsigned>(ff3_reg));
+  printf("ff4:              %u\n", static_cast<unsigned>(ff4_reg));
+  printf("db_tick_o:        %u\n", static_cast<unsigned>(db_tick()));
 }

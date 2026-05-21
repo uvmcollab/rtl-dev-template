@@ -5,7 +5,7 @@
 // [Language]     C++
 // [Created]      -
 // [Modified]     -
-// [Description]  -
+// [Description]  DPI wrapper for the debouncer reference model
 // [Notes]        -
 // [Status]       stable
 // [Revisions]    -
@@ -14,7 +14,17 @@
 #include "svdpi.h"
 #include "debouncer.h"
 
-static Debouncer g_dut(100);
+static Debouncer g_debouncer;
+
+extern "C" void debouncer_init(unsigned int clk_freq_hz, unsigned int stable_time_us) {
+  g_debouncer.configure(clk_freq_hz, stable_time_us);
+}
+
+
+extern "C" void debouncer_reset() {
+  g_debouncer.reset();
+}
+
 
 extern "C" void debouncer_step(
     svBit rst,
@@ -23,12 +33,9 @@ extern "C" void debouncer_step(
     svBit* level_state,
     unsigned int* cycle_counter
 ) {
-    
-    g_dut.step(static_cast<bool>(rst), static_cast<bool>(sw));
-    // g_dut.print_state(" Debug C++ ");
+  g_debouncer.step(static_cast<bool>(rst), static_cast<bool>(sw));
 
-    *tick_state  = static_cast<svBit>(g_dut.get_tick_state());
-    *level_state = static_cast<svBit>(g_dut.get_level_state());
-    *cycle_counter = static_cast<unsigned int>(g_dut.get_cycle_counter());
+  *tick_state = static_cast<svBit>(g_debouncer.db_tick());
+  *level_state = static_cast<svBit>(g_debouncer.db_level());
+  *cycle_counter = g_debouncer.cycle_counter();
 }
-

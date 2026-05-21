@@ -5,58 +5,55 @@
 // [Language]     C++
 // [Created]      -
 // [Modified]     -
-// [Description]  DPI (Direct Programming Interface) simulation
+// [Description]  Standalone simulation for the debouncer reference model
 // [Notes]        -
 // [Status]       stable
 // [Revisions]    -
 //==============================================================================
 
-#include <iostream>
-#include <cstdio>
+#include <stdint.h>
+#include <stdio.h>
+
 #include "debouncer.h"
 
-int main(int argc, char* argv[]) {
-   (void)argc;
-    (void)argv;
+int main() {
+  const uint32_t clk_freq_hz = 100000000;
+  const uint32_t stable_time_us = 1;
 
-  // Initialization
-  uint32_t max_count = 100;
-  bool rst = 0;
-  bool sw = 0;
+  Debouncer debouncer;
+  debouncer.configure(clk_freq_hz, stable_time_us);
 
-  // Create object
-  Debouncer dut(max_count);
+  bool rst = true;
+  bool sw = false;
 
-  std::cout << "Begin of simulation" << "\n";
+  char msg[64];
 
-  // Reset
-  rst = 1; sw = 0;
-  dut.step(rst, sw);
-  dut.print_state(" RESET ");
+  printf("Begin of simulation\n");
 
-  // Empty
-  rst = 0; sw = 0;
-  dut.step(rst, sw);
-  dut.print_state(" RESET OFF: ");
+  debouncer.step(rst, sw);
+  debouncer.print_state("reset asserted");
 
-  // Execution
-  std::string idx;
-  rst = 0; sw = 1;
-  for (std::size_t i = 0; i < 120; i++) {
-    idx = std::to_string(i) + " ";
-    dut.step(rst, sw);
-    dut.print_state(" ITER: " + idx);
+  rst = false;
+  for (int i = 0; i < 3; ++i) {
+    debouncer.step(rst, sw);
+    snprintf(msg, sizeof(msg), "idle %d", i);
+    debouncer.print_state(msg);
   }
 
-  rst = 0; sw = 0;
-  dut.step(rst, sw);
-  dut.print_state(" LOW ");
+  sw = true;
+  for (int i = 0; i < 105; ++i) {
+    debouncer.step(rst, sw);
+    snprintf(msg, sizeof(msg), "press %d", i);
+    debouncer.print_state(msg);
+  }
 
-  rst = 0; sw = 0;
-  dut.step(rst, sw);
-  dut.print_state(" LOW ");
+  sw = false;
+  for (int i = 0; i < 105; ++i) {
+    debouncer.step(rst, sw);
+    snprintf(msg, sizeof(msg), "release %d", i);
+    debouncer.print_state(msg);
+  }
 
-  std::cout << "End of simulation" << "\n";
-
+  printf("End of simulation\n");
   return 0;
 }

@@ -5,7 +5,7 @@
 // [Language]     C++
 // [Created]      Dec 2025
 // [Modified]     -
-// [Description]  -
+// [Description]  Cycle-accurate C++ reference model for debouncer.sv
 // [Notes]        -
 // [Status]       stable
 // [Revisions]    -
@@ -14,88 +14,33 @@
 #ifndef DEBOUNCER_H
 #define DEBOUNCER_H
 
-#include <iostream>
-#include <cstdio>
-#include <cstdint>
-#include <fstream>
+#include <stdint.h>
+#include <stdio.h>
 
 class Debouncer {
   public:
-    Debouncer(uint32_t max_count);
+    Debouncer();
+    explicit Debouncer(uint32_t counter_max);
+
+    void configure(uint32_t clk_freq_hz, uint32_t stable_time_us);
+    void configure_counter_max(uint32_t counter_max);
+    void reset();
     void step(bool rst, bool sw);
-    void print_state(std::string const& msg = "State");
-    
-    bool get_tick_state()     const { return tick_state;    }
-    bool get_level_state()    const { return level_state;   }
-    uint32_t get_cycle_counter()  const { return cycle_counter; }
-    
+    void print_state(const char* msg = "State") const;
+
+    bool db_level() const { return ff3_reg; }
+    bool db_tick() const { return static_cast<bool>((!ff4_reg) && ff3_reg); }
+    uint32_t cycle_counter() const { return cnt_reg; }
+    uint32_t counter_max() const { return counter_max_reg; }
+
   private:
-    
-    uint32_t max_count;
+    uint32_t counter_max_reg = 100;
 
-    // Outputs
-    bool tick_state = 0;
-    bool level_state = 0;
-
-    // Internal
-    bool sw_state = 0;
-    uint32_t cycle_counter = 0;
-    uint32_t sync_counter = 0;
-    bool value_to_load = 0;
+    bool ff1_reg = false;
+    bool ff2_reg = false;
+    bool ff3_reg = false;
+    bool ff4_reg = false;
+    uint32_t cnt_reg = 0;
 };
 
-/*
- * SystemVerilog DPI-C Data Type Mappings
- * ========================================
- *
- * BASIC DATA TYPES
- * -------------------------------------------------------------------------------
- * SystemVerilog      | C/C++ (svdpi.h)    | Size   | Notes
- * -------------------------------------------------------------------------------
- * byte               | char               | 8-bit  | Signed
- * shortint           | short int          | 16-bit | Signed
- * int                | int                | 32-bit | Signed
- * longint            | long long          | 64-bit | Signed
- * real               | double             | 64-bit | IEEE 754
- * shortreal          | float              | 32-bit | IEEE 754
- * chandle            | void*              | Ptr    | Opaque handle
- * string             | const char*        | Ptr    | Null-terminated
- * bit                | svBit              | 1-bit  | Unsigned
- * logic              | svLogic            | 1-bit  | 4-state (0,1,X,Z)
- *
- * PACKED ARRAYS (VECTORS)
- * -------------------------------------------------------------------------------
- * SystemVerilog      | C/C++ (svdpi.h)    | Notes
- * -------------------------------------------------------------------------------
- * bit [N:0]          | svBitVecVal*       | 2-state vector
- * logic [N:0]        | svLogicVecVal*     | 4-state vector
- *
- * UNPACKED ARRAYS
- * -------------------------------------------------------------------------------
- * SystemVerilog      | C/C++ (svdpi.h)           | Notes
- * -------------------------------------------------------------------------------
- * Open array []      | const svOpenArrayHandle   | Read-only array
- * Open array []      | svOpenArrayHandle         | Writable array
- *
- * SPECIAL TYPES
- * -------------------------------------------------------------------------------
- * Type               | Usage
- * -------------------------------------------------------------------------------
- * svScope            | Get/set current scope
- * svBitVecVal        | Structure for bit vectors
- * svLogicVecVal      | Structure for logic vectors (aval/bval)
- *
- * EXAMPLE USAGE:
- * -------------------------------------------------------------------------------
- * #include "svdpi.h"
- *
- * extern "C" void my_dpi_func(
- *     int a,              // SystemVerilog: int
- *     long long b,        // SystemVerilog: longint
- *     double c,           // SystemVerilog: real
- *     const char* str,    // SystemVerilog: string
- *     void* handle        // SystemVerilog: chandle
- * );
- */
-
- #endif // DEBOUNCER_H
+#endif  // DEBOUNCER_H
