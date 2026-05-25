@@ -20,6 +20,7 @@ Makefile
 # C/C++
 bin/
 obj/
+lib/
 *.o
 *.lib
 *.exe
@@ -27,6 +28,9 @@ obj/
 # Python
 .venv/
 venv/
+
+# Regression
+regression.mk
 
 # Synopsys
 setup_synopsys_eda.tcsh
