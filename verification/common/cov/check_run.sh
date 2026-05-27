@@ -110,7 +110,8 @@ fi
 match="$(grep -nE -f "$FAIL_PATTERNS_FILE" "$RUN_LOG" | head -1 || true)"
 
 if [[ -n "$match" ]]; then
-    fail "TEST_ID=${TEST_ID:-unknown} matched fail pattern: ${RUN_LOG}:${match}"
+    info "Matched fail pattern: ${RUN_LOG}:${match}"
+    fail "TEST_ID=${TEST_ID:-unknown}"
 fi
 
 pass "TEST_ID=${TEST_ID:-unknown} passed"
