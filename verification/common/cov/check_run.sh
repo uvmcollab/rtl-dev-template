@@ -7,10 +7,11 @@
 ## [Language]       Bash scripting
 ## [Created]        -
 ## [Modified]       -
-## [Description]    Checks the la
+## [Description]    Using the run manifest of a test it access the log file
+##                  and performs checks to detect if the UVM summary has 
+##                  UVM_ERRORS or UVM_FATALS then it looks for FAIL_PATTERNS 
+##                  using a fail_patterns.txt file.
 ## [Notes]          -
-##                   URG_COMMON_FLAGS is passed as a single quoted string from Make.
-##                   Project paths are assumed not to contain spaces.
 ## [Status]         stable
 ## [Revisions]      -
 ##==============================================================================
@@ -20,14 +21,18 @@ set -euo pipefail
 
 # --------------------------------- FUNCTIONS ----------------------------------
 
-fail() {
-    printf '[FAIL] %s\n' "$1"
-    exit 1
+info() {
+    printf '[INFO] %s\n' "$1"
 }
 
 pass() {
     printf '[PASS] %s\n' "$1"
     exit 0
+}
+
+fail() {
+    printf '[FAIL] %s\n' "$1"
+    exit 1
 }
 
 check_required_file() {
@@ -38,7 +43,6 @@ check_required_file() {
     [[ -f "$value" ]] || fail "$name does not exist: $value"
 }
 
-
 check_non_empty() {
     local name="$1"
     local value="${2:-}"
@@ -46,10 +50,40 @@ check_non_empty() {
     [[ -n "$value" ]] || fail "$name is empty"
 }
 
+get_uvm_count() {
+    local key="${1:?missing key}"
+    local log="${2:?missing log}"
+
+    tail -n 50 "$log" |
+        grep -E "^[[:space:]]*${key}[[:space:]]*:[[:space:]]*[0-9]+[[:space:]]*$" |
+        tail -n 1 |
+        grep -oE '[0-9]+'
+}
+
+check_uvm_summary() {
+    local log="${1:?missing log}"
+    local uvm_errors uvm_fatals uvm_warnings
+
+    uvm_errors="$(get_uvm_count UVM_ERROR "$log" || true)"
+    uvm_fatals="$(get_uvm_count UVM_FATAL "$log" || true)"
+    uvm_warnings="$(get_uvm_count UVM_WARNINGS "$log" || true)"
+
+    uvm_errors="${uvm_errors:-0}"
+    uvm_fatals="${uvm_fatals:-0}"
+    uvm_warnings="${uvm_warnings:-0}"
+
+    printf "[INFO] %s\n" "UVM_WARNINGS: $uvm_warnings, UVM_ERRORS: $uvm_errors, UVM_FATALS: $uvm_fatals"
+
+    [[ "$uvm_errors" -eq 0 && "$uvm_fatals" -eq 0 ]]
+}
+
 # -------------------------------- CLI PARSING ---------------------------------
 
 RUN_MANIFEST_FILE="${1:?missing RUN_MANIFEST_FILE}"
 check_required_file "RUN_MANIFEST_FILE" "$RUN_MANIFEST_FILE"
+
+FAIL_PATTERNS_FILE="${2:?missing FAIL_PATTERNS_FILE}"
+check_required_file "FAIL_PATTERNS_FILE" "$FAIL_PATTERNS_FILE"
 
 # ------------------------------------ LOAD ------------------------------------
 
@@ -68,28 +102,15 @@ if [[ "$SIM_STATUS" != "0" ]]; then
 fi
 
 # Gate 2: UVM summary counts
-uvm_errors=$(grep -oP 'UVM_ERROR\s*:\s*\K[0-9]+' "$RUN_LOG" | tail -1 || true)
-uvm_fatals=$(grep -oP 'UVM_FATAL\s*:\s*\K[0-9]+' "$RUN_LOG" | tail -1 || true)
-
-if [[ "${uvm_errors:-0}" -gt 0 || "${uvm_fatals:-0}" -gt 0 ]]; then
-    fail "TEST_ID=${TEST_ID:-unknown} UVM_ERROR=${uvm_errors:-0} UVM_FATAL=${uvm_fatals:-0}"
+if ! check_uvm_summary "$RUN_LOG"; then
+    fail "UVM summary reports failures"
 fi
 
 # Gate 3: crash/timeout patterns (sim may have died before printing summary)
-FAIL_PATTERNS=(
-    'Assertion.*failed'
-    'TIMEOUT'
-    'TEST FAILED'
-    'Segmentation fault'
-    'core dumped'
-    'FAILED:\s*[1-9][0-9]*'   # project-specific: non-zero FAILED count
-)
+match="$(grep -nE -f "$FAIL_PATTERNS_FILE" "$RUN_LOG" | head -1 || true)"
 
-for pattern in "${FAIL_PATTERNS[@]}"; do
-    match=$(grep -nP "$pattern" "$RUN_LOG" 2>/dev/null | head -1 || true)
-    if [[ -n "$match" ]]; then
-        fail "TEST_ID=${TEST_ID:-unknown} matched '$pattern': ${RUN_LOG}:${match}"
-    fi
-done
+if [[ -n "$match" ]]; then
+    fail "TEST_ID=${TEST_ID:-unknown} matched fail pattern: ${RUN_LOG}:${match}"
+fi
 
-pass "TEST_ID=${TEST_ID:-unknown} SIM_STATUS=0 and no fail pattern matched"
+pass "TEST_ID=${TEST_ID:-unknown} passed"
