@@ -66,13 +66,13 @@ check_uvm_summary() {
 
     uvm_errors="$(get_uvm_count UVM_ERROR "$log" || true)"
     uvm_fatals="$(get_uvm_count UVM_FATAL "$log" || true)"
-    uvm_warnings="$(get_uvm_count UVM_WARNINGS "$log" || true)"
+    uvm_warnings="$(get_uvm_count UVM_WARNING "$log" || true)"
 
     uvm_errors="${uvm_errors:-0}"
     uvm_fatals="${uvm_fatals:-0}"
     uvm_warnings="${uvm_warnings:-0}"
 
-    printf "[INFO] %s\n" "UVM_WARNINGS: $uvm_warnings, UVM_ERRORS: $uvm_errors, UVM_FATALS: $uvm_fatals"
+    info "UVM_WARNING: $uvm_warnings, UVM_ERROR: $uvm_errors, UVM_FATAL: $uvm_fatals"
 
     [[ "$uvm_errors" -eq 0 && "$uvm_fatals" -eq 0 ]]
 }

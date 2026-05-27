@@ -39,9 +39,7 @@ find_all_files() {
     local search_dir="${1:?missing search_dir}"
     local pattern="${2:?missing pattern}"
 
-    if [[ ! -d "$search_dir" ]]; then
-        return 0
-    fi
+    [[ -d "$search_dir" ]] || fail "Directory does not exist: $search_dir"
 
     find "$search_dir" -type f -name "$pattern" -printf '%T@ %p\n' |
         sort -n |
@@ -83,10 +81,7 @@ URG_COMMON_FLAGS="${3:?missing URG_COMMON_FLAGS}"
 MANIFEST_LIST="$(find_all_files "$RUN_DIR" "$RUN_MANIFEST_GLOB")"
 
 # Check if no manifest is found
-if [[ -z "$MANIFEST_LIST" ]]; then
-    printf '[FAIL] %s\n' "No run manifest found"
-    exit 1
-fi
+[[ -n "$MANIFEST_LIST" ]] || fail "No run manifest found"
 
 # Convert to an array
 mapfile -t MANIFEST_ARRAY <<< "$MANIFEST_LIST"
@@ -111,7 +106,7 @@ for manifest in "${MANIFEST_ARRAY[@]}"; do
     check_non_empty "SIM_STATUS" "${SIM_STATUS:-}"
 
     # Skip failed tests
-    if [[ "$SIM_STATUS" == "1" ]]; then
+    if [[ "$SIM_STATUS" != "0" ]]; then
         printf "[SKIP] %s\n" "Test failed, skipping coverage merge: $manifest"
         continue
     fi
@@ -133,7 +128,7 @@ for manifest in "${MANIFEST_ARRAY[@]}"; do
         num_cov_run_true=$((num_cov_run_true + 1))
         
         # Check non empty field
-        check_required_file "BUILD_MANIFEST_FILE" "${BUILD_MANIFEST_FILE:=}"
+        check_required_file "BUILD_MANIFEST_FILE" "${BUILD_MANIFEST_FILE:-}"
 
         # Reset value before sourcing to avoid keeping old values
         BUILD_COV_DB=""
@@ -159,27 +154,26 @@ if [[ "$num_valid_tests" -eq 0 ]]; then
     fail "No successful tests found"
 fi
 
-printf "[INFO] %s %s\n" "Number of tests:       " "$num_valid_tests"
-printf "[INFO] %s %s\n" "Tests with COV ENABLE: " "$num_cov_run_true"
-printf "[INFO] %s %s\n" "Tests with COV DISABLE:" "$num_cov_run_false"
-
+# Stats
+info "Number of tests:        $num_valid_tests"
+info "Tests with COV ENABLE:  $num_cov_run_true"
+info "Tests with COV DISABLE: $num_cov_run_false"
 
 if [[ "$num_cov_run_false" -eq "$num_valid_tests" ]]; then
-    printf '[INFO] %s\n' "All successful runs use normal coverage DBs"
+    info "All successful runs use normal coverage DBs"
 
     MERGE_COV_DBS=("${RUN_COV_DBS[@]}")
 
 elif [[ "$num_cov_run_true" -eq "$num_valid_tests" ]]; then
-    printf '[INFO] %s\n' "All successful runs use split build/run coverage DBs"
+    info "All successful runs use split build/run coverage DBs"
 
     # Remove duplicate BUILD_COV_DB entries
     mapfile -t UNIQUE_BUILD_COV_DBS < <(printf '%s\n' "${BUILD_COV_DBS[@]}" | sort -u)
 
     if [[ "${#UNIQUE_BUILD_COV_DBS[@]}" -ne 1 ]]; then
-        printf '[FAIL] %s\n' "Expected exactly one unique BUILD_COV_DB, found ${#UNIQUE_BUILD_COV_DBS[@]}"
-        printf '[INFO] Build coverage DBs found:\n'
+        info "Build coverage DBs found"
         printf '  %s\n' "${UNIQUE_BUILD_COV_DBS[@]}"
-        exit 1
+        fail "Expected exactly one unique BUILD_COV_DB, found ${#UNIQUE_BUILD_COV_DBS[@]}"
     fi
 
     MERGE_COV_DBS=("${UNIQUE_BUILD_COV_DBS[0]}" "${RUN_COV_DBS[@]}")
@@ -195,7 +189,7 @@ for cov_db in "${MERGE_COV_DBS[@]}"; do
     URG_DIR_ARGS+=("-dir" "$cov_db")
 done
 
-printf "[INFO] Coverage DBs to merge:\n"
+info "Coverage DBs to merge:"
 printf "  %s\n" "${MERGE_COV_DBS[@]}"
 
 # Convert Make-provided string into an array
