@@ -7,10 +7,11 @@
 ## [Language]       Bash scripting
 ## [Created]        -
 ## [Modified]       -
-## [Description]    -
+## [Description]    Perform the coverage of all runs, all runs must have code 
+##                  code coverage enable or disable, if they are mixed the script
+##                  will stop.
+##                  
 ## [Notes]          -
-##                   URG_COMMON_FLAGS is passed as a single quoted string from Make.
-##                   Project paths are assumed not to contain spaces.
 ## [Status]         stable
 ## [Revisions]      -
 ##==============================================================================
@@ -19,6 +20,20 @@
 set -euo pipefail
 
 # --------------------------------- FUNCTIONS ----------------------------------
+
+info() {
+    printf '[INFO] %s\n' "$1"
+}
+
+pass() {
+    printf '[PASS] %s\n' "$1"
+    exit 0
+}
+
+fail() {
+    printf '[FAIL] %s\n' "$1"
+    exit 1
+}
 
 find_all_files() {
     local search_dir="${1:?missing search_dir}"
@@ -31,11 +46,6 @@ find_all_files() {
     find "$search_dir" -type f -name "$pattern" -printf '%T@ %p\n' |
         sort -n |
         cut -d' ' -f2-
-}
-
-fail() {
-    printf '[FAIL] %s\n' "$1"
-    exit 1
 }
 
 check_required_dir() {

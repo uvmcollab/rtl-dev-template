@@ -7,10 +7,8 @@
 ## [Language]       Bash scripting
 ## [Created]        -
 ## [Modified]       -
-## [Description]    -
+## [Description]    Performs the coverage of the last run
 ## [Notes]          -
-##                   URG_COMMON_FLAGS is passed as a single quoted string from Make.
-##                   Project paths are assumed not to contain spaces.
 ## [Status]         stable
 ## [Revisions]      -
 ##==============================================================================
@@ -19,6 +17,20 @@
 set -euo pipefail
 
 # --------------------------------- FUNCTIONS ----------------------------------
+
+info() {
+    printf '[INFO] %s\n' "$1"
+}
+
+pass() {
+    printf '[PASS] %s\n' "$1"
+    exit 0
+}
+
+fail() {
+    printf '[FAIL] %s\n' "$1"
+    exit 1
+}
 
 find_latest_file() {
     local search_dir="${1:?missing search_dir}"
@@ -32,11 +44,6 @@ find_latest_file() {
         sort -n |
         tail -n 1 |
         cut -d' ' -f2-
-}
-
-fail() {
-    printf '[FAIL] %s\n' "$1"
-    exit 1
 }
 
 check_required_dir() {
