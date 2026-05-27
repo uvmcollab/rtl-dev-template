@@ -7,7 +7,8 @@
 ## [Language]       Bash scripting
 ## [Created]        -
 ## [Modified]       -
-## [Description]    Performs the coverage of the last run
+## [Description]    Performs the coverage for latest run, gated only by 
+##                  simulator success and coverage DB presence
 ## [Notes]          -
 ## [Status]         stable
 ## [Revisions]      -
@@ -36,9 +37,7 @@ find_latest_file() {
     local search_dir="${1:?missing search_dir}"
     local pattern="${2:?missing pattern}"
 
-    if [[ ! -d "$search_dir" ]]; then
-        return 0
-    fi
+    [[ -d "$search_dir" ]] || fail "Directory does not exist: $search_dir"
 
     find "$search_dir" -type f -name "$pattern" -printf '%T@ %p\n' |
         sort -n |
@@ -62,6 +61,13 @@ check_required_file() {
     [[ -f "$value" ]] || fail "$name does not exist: $value"
 }
 
+check_non_empty() {
+    local name="$1"
+    local value="${2:-}"
+
+    [[ -n "$value" ]] || fail "$name is empty"
+}
+
 # -------------------------------- CLI PARSING ---------------------------------
 
 RUN_DIR="${1:?missing RUN_DIR}"
@@ -74,13 +80,18 @@ URG_COMMON_FLAGS="${3:?missing URG_COMMON_FLAGS}"
 RUN_MANIFEST_FILE="$(find_latest_file "$RUN_DIR" "$RUN_MANIFEST_GLOB")"
 
 # Check if no manifest is found
-if [[ -z "$RUN_MANIFEST_FILE" ]]; then
-    printf '[FAIL] %s\n' "No run manifest found"
-    exit 1
-fi
+[[ -n "$RUN_MANIFEST_FILE" ]] || fail "No run manifest found"
 
 # Load it
 source "$RUN_MANIFEST_FILE"
+
+# Check non empty fields
+check_non_empty "SIM_STATUS" "${SIM_STATUS:-}"
+
+# Check SIM_STATUS
+if [[ "$SIM_STATUS" != "0" ]]; then
+    fail "TEST_ID=${TEST_ID:-unknown} SIM_STATUS=$SIM_STATUS"
+fi
 
 # Check if run coverage database exists
 check_required_dir "RUN_COV_DB" "${RUN_COV_DB:-}"
@@ -103,10 +114,10 @@ if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
     check_required_dir "BUILD_COV_DB" "${BUILD_COV_DB:-}"
 
     # Merge both databases
-    printf '[INFO] %s\n' "Merging run + build coverage"
+    info "Merging run + build coverage"
     urg -dir "$RUN_COV_DB" -dir "$BUILD_COV_DB" "${URG_FLAGS[@]}"
 else
     # Merge just run coverage
-    printf '[INFO] %s\n' "Merging run coverage only"
+    info "Merging run coverage only"
     urg -dir "$RUN_COV_DB" "${URG_FLAGS[@]}"
 fi
