@@ -191,4 +191,5 @@ printf "  %s\n" "${MERGE_COV_DBS[@]}"
 # Convert Make-provided string into an array
 read -r -a URG_FLAGS <<< "$URG_COMMON_FLAGS"
 
+# Execute URG
 urg "${URG_DIR_ARGS[@]}" "${URG_FLAGS[@]}"
