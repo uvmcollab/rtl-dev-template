@@ -34,15 +34,18 @@ URG_COMMON_FLAGS = -full64 -format both \
 
 VERDI_COV_FLAGS ?= -q -cov -covdir $(COV_MERGE_DB)
 
+FAIL_PATTERNS_FILE ?= $(COMMON_COV_DIR)/fail_patterns.txt
+
 # ================================  TARGETS  ==================================
 
 .PHONY: latest
-latest: # COMMON: Get latest logs
+latest: # COV: Get latest logs
 	@bash $(COMMON_COV_DIR)/get_latest_logs.sh \
 	"$(BUILD_DIR)" "*_compile.log" \
 	"$(RUN_DIR)" "*_run.log" \
 	"$(COV_DIR)" "*_cov.log" \
 	"$(RUN_DIR)" "*_run_manifest.mk"
+#______________________________________________________________________________
 
 .PHONY: list-builds
 list-builds: ## COV: List all build coverage manifests
@@ -77,6 +80,14 @@ cov-latest: ## COV: Generating coverage from last run
 	"$(RUN_DIR)" "$(RUN_MANIFEST_GLOB)" "$(URG_COMMON_FLAGS)"
 #______________________________________________________________________________
 
+.PHONY: cov-latest-checked
+cov-latest-checked: ## COV: Generating coverage from last passing run
+	@printf "$(C_CYN)%s$(C_RST)\n" "Generating coverage from latest passing run"
+	@mkdir -p $(COV_LOGS_DIR)
+	@bash $(COMMON_COV_DIR)/cov_checked_last_run.sh \
+	"$(RUN_DIR)" "$(RUN_MANIFEST_GLOB)" "$(URG_COMMON_FLAGS)" "$(FAIL_PATTERNS_FILE)"
+#______________________________________________________________________________
+
 .PHONY: cov-all
 cov-all: ## COV: Generating coverage report of all runs
 	@printf "$(C_CYN)%s$(C_RST)\n" "Generating coverage of all run"
@@ -85,12 +96,12 @@ cov-all: ## COV: Generating coverage report of all runs
 	"$(RUN_DIR)" "$(RUN_MANIFEST_GLOB)" "$(URG_COMMON_FLAGS)"
 #______________________________________________________________________________
 
-.PHONY: cov-single
-cov-single: ## COV: Generating coverage report single run
-	@printf "$(C_CYN)%s$(C_RST)\n" "Generating coverage of all run"
+.PHONY: cov-all-checked
+cov-all-checked: ## COV: Generating coverage report of all passing runs
+	@printf "$(C_CYN)%s$(C_RST)\n" "Generating coverage of all passing run"
 	@mkdir -p $(COV_LOGS_DIR)
-	@bash $(COMMON_COV_DIR)/cov_all_runs.sh \
-	"$(RUN_DIR)" "$(RUN_MANIFEST_GLOB)" "$(URG_COMMON_FLAGS)"
+	@bash $(COMMON_COV_DIR)/cov_checked_all_runs.sh \
+	"$(RUN_DIR)" "$(RUN_MANIFEST_GLOB)" "$(URG_COMMON_FLAGS)" "$(FAIL_PATTERNS_FILE)"
 #______________________________________________________________________________
 
 .PHONY: verdi-cov
@@ -113,6 +124,6 @@ help-cov: ## COV: Displays help message
 	@printf "%s\n" "Usage: make <target> [variables]"
 	@printf "%s\n" "------------------------------------ TARGETS -----------------------------------"
 	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(COMMON_MK_DIR)/cov.mk | \
-	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-15s$(C_RST) %s\n", $$1, $$2}'
+	awk 'BEGIN {FS = ":.*?## "}; {printf "- make $(C_CYN)%-20s$(C_RST) %s\n", $$1, $$2}'
 	@printf "%s\n" "================================================================================"
 #_______________________________________________________________________________

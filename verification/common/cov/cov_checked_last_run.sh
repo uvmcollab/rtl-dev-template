@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 ##==============================================================================
-## [Filename]       cov_last_run.sh
+## [Filename]       cov_checked_last_run.sh
 ## [Project]        -
 ## [Author]         Ciro Bermudez - cirofabian.bermudez@gmail.com
 ## [Language]       Bash scripting
 ## [Created]        -
 ## [Modified]       -
-## [Description]    Performs the coverage for latest run, gated only by 
-##                  simulator success and coverage DB presence
+## [Description]    Performs the coverage of the last run
 ## [Notes]          -
 ## [Status]         stable
 ## [Revisions]      -
@@ -37,7 +36,9 @@ find_latest_file() {
     local search_dir="${1:?missing search_dir}"
     local pattern="${2:?missing pattern}"
 
-    [[ -d "$search_dir" ]] || fail "Directory does not exist: $search_dir"
+    if [[ ! -d "$search_dir" ]]; then
+        return 0
+    fi
 
     find "$search_dir" -type f -name "$pattern" -printf '%T@ %p\n' |
         sort -n |
@@ -73,6 +74,15 @@ check_non_empty() {
 RUN_DIR="${1:?missing RUN_DIR}"
 RUN_MANIFEST_GLOB="${2:?missing RUN_MANIFEST_GLOB}"
 URG_COMMON_FLAGS="${3:?missing URG_COMMON_FLAGS}"
+FAIL_PATTERNS_FILE="${4:?missing FAIL_PATTERNS_FILE}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CHECK_RUN_SCRIPT="$SCRIPT_DIR/check_run.sh"
+COV_LAST_RUN_SCRIPT="$SCRIPT_DIR/cov_last_run.sh"
+
+check_required_file "CHECK_RUN_SCRIPT" "$CHECK_RUN_SCRIPT"
+check_required_file "COV_LAST_RUN_SCRIPT" "$COV_LAST_RUN_SCRIPT"
+check_required_file "FAIL_PATTERNS_FILE" "$FAIL_PATTERNS_FILE"
 
 # ----------------------------- LOAD RUN MANIFEST ------------------------------
 
@@ -82,42 +92,8 @@ RUN_MANIFEST_FILE="$(find_latest_file "$RUN_DIR" "$RUN_MANIFEST_GLOB")"
 # Check if no manifest is found
 [[ -n "$RUN_MANIFEST_FILE" ]] || fail "No run manifest found"
 
-# Load it
-source "$RUN_MANIFEST_FILE"
+info  "Checking latest run status"
+"$CHECK_RUN_SCRIPT" "$RUN_MANIFEST_FILE" "$FAIL_PATTERNS_FILE"
 
-# Check non empty fields
-check_non_empty "SIM_STATUS" "${SIM_STATUS:-}"
-
-# Check SIM_STATUS
-if [[ "$SIM_STATUS" != "0" ]]; then
-    fail "TEST_ID=${TEST_ID:-unknown} SIM_STATUS=$SIM_STATUS"
-fi
-
-# Check if run coverage database exists
-check_required_dir "RUN_COV_DB" "${RUN_COV_DB:-}"
-
-# --------------------------------- MAIN LOGIC ---------------------------------
-
-# Convert Make-provided string into an array
-read -r -a URG_FLAGS <<< "$URG_COMMON_FLAGS"
-
-# Check if code coverage was enabled at run time
-if [[ "${ENABLE_CODE_COV_RUN:-false}" == "true" ]]; then
-
-    # Check if build manifest exists
-    check_required_file "BUILD_MANIFEST_FILE" "${BUILD_MANIFEST_FILE:-}"
-
-    # Load it
-    source "$BUILD_MANIFEST_FILE"
-
-    # Check if build coverage database exists
-    check_required_dir "BUILD_COV_DB" "${BUILD_COV_DB:-}"
-
-    # Merge both databases
-    info "Merging run + build coverage"
-    urg -dir "$RUN_COV_DB" -dir "$BUILD_COV_DB" "${URG_FLAGS[@]}"
-else
-    # Merge just run coverage
-    info "Merging run coverage only"
-    urg -dir "$RUN_COV_DB" "${URG_FLAGS[@]}"
-fi
+info "Latest run passed, merging coverage"
+"$COV_LAST_RUN_SCRIPT" "$RUN_DIR" "$RUN_MANIFEST_GLOB" "$URG_COMMON_FLAGS"

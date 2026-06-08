@@ -17,6 +17,19 @@
 set -euo pipefail
 
 # --------------------------------- FUNCTIONS ----------------------------------
+info() {
+    printf '[INFO] %s\n' "$1"
+}
+
+pass() {
+    printf '[PASS] %s\n' "$1"
+    exit 0
+}
+
+fail() {
+    printf '[FAIL] %s\n' "$1"
+    exit 1
+}
 
 find_latest_file() {
     local search_dir="${1:?missing search_dir}"
